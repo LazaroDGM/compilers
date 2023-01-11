@@ -77,8 +77,7 @@ def move(automaton, states, symbol):
     `new_states`: Conjunto de estados de `automaton` resultantes
     '''
     moves = set()
-    for state in states:
-        # Your code here
+    for state in states:        
         next_states = automaton.transitions[state].get(symbol, [])
         moves.update(next_states)
     return moves
@@ -99,13 +98,66 @@ def epsilon_closure(automaton, states):
     -----------
     `new_states`: Conjunto de estados de `automaton` resultantes
     '''    
-    pending = [ s for s in states ] # equivalente a list(states) pero me gusta así :p
-    closure = { s for s in states } # equivalente a  set(states) pero me gusta así :p
+    pending = list(states)
+    closure = set(states)
     
     while pending:
-        state = pending.pop()
-        # Your code here
+        state = pending.pop()        
         news_states = automaton.transitions[state].get('', [])        
         closure.update(epsilon_closure(automaton, news_states))
                 
     return set(closure)
+
+def nfa_to_dfa(automaton):
+    '''
+    Funcion para convertir un automata finito no determinista en un automata finito determinista.
+    Usa las funciones `move` (Goto) y `epsilon_closure` (epsilonClausura).
+
+    Parametros
+    ------------
+    `automaton`: Automata
+
+    Return
+    -----------
+    `new_automaton`: Nuevo automata finito determinista
+    '''
+    class Container(set):
+        def __init_subclass__(cls) -> None:
+            return super().__init_subclass__()    
+        id = -1
+        is_final = False
+
+    transitions = {}
+    
+    start = Container(epsilon_closure(automaton, [automaton.start]))
+    start.id = 0
+    start.is_final = any(s in automaton.finals for s in start)
+    states = [ start ]
+
+    pending = [ start ]
+    while pending:
+        state = pending.pop()
+
+        for symbol in automaton.vocabulary:            
+            _move = move(automaton= automaton, states= state, symbol= symbol)
+            _closure = Container(epsilon_closure(automaton, _move))
+
+            if len(_closure) == 0:
+                continue
+            if _closure not in states:
+                _closure.id = len(states)
+                _closure.is_final = any(s in automaton.finals for s in _closure)
+                pending.append(_closure)
+                states.append(_closure)
+            else:
+                _closure.id = states.index(_closure)
+
+            try:
+                transitions[state.id, symbol]
+                assert False, 'Invalid DFA!!!'
+            except KeyError:                             
+                transitions[state.id, symbol] = _closure.id                
+    
+    finals = [ state.id for state in states if state.is_final ]
+    dfa = DFA(len(states), finals, transitions)
+    return dfa
