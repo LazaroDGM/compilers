@@ -1,4 +1,4 @@
-from pycompiler import ContainerSet, Grammar
+from pycompiler import ContainerSet, Grammar, Production, Sentence
 
 def compute_local_first(firsts: dict, alpha):
     '''
@@ -153,7 +153,7 @@ def build_parsing_table(G, firsts=None, follows=None):
     if firsts is None:
         firsts = compute_firsts(G)
     if follows is None:
-        follows = compute_follows(G)
+        follows = compute_follows(G, firsts)
 
     M = {}
     for production in G.Productions:
@@ -177,3 +177,52 @@ def build_parsing_table(G, firsts=None, follows=None):
                     return None
                 M[X, t] = [production]
     return M  
+
+
+def parser_LL1_generator(G, M=None, firsts=None, follows=None):
+    '''
+    Generador de parser LL(1)
+
+    Parametros:
+    -----------
+        `G`: La gramatica a la que se le hallara la tabla LL(1). Debe ser `Grammar`
+        `M`: Tabla LL(1) asociada. Si la gramatica no es LL(1)
+        `firsts`: Diccionario de todos los Firsts por Producciones, No-terminales y Terminales
+        `follows`: Diccionario de todos los Follows por No-Terminales
+
+    Retorna:
+    -----------
+        `parser`: Parser LL(1) asociado. Funcion que recibe una secuencia de tokens y
+        genera la secuencia de producciones que parsea la cadena. Si la gramatica
+        no es LL(1) se retorna None.
+    '''
+        
+    if M is None:
+        M = build_parsing_table(G=G, firsts=firsts, follows=follows)
+        if M is None:
+            print('La gramatica no es LL(1)')
+            return None
+        
+    def parser(w):
+        stack = [G.startSymbol]
+        cursor = 0
+        output = []
+        
+        while len(stack) > 0:
+            top = stack.pop()
+            a = w[cursor]
+            if a == top:                                
+                cursor += 1
+                if cursor == len(w):
+                    break
+                else:
+                    continue
+
+            production = M[top, a][0]            
+            output.append(production)
+            for item in reversed(production.Right):
+                stack.append(item)            
+        
+        return output
+        
+    return parser
