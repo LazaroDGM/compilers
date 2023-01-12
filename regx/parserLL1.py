@@ -137,32 +137,43 @@ def compute_first_follows(G):
     return firsts, follows
 
 
-def build_parsing_table(G, firsts, follows):
-    # init parsing table
+def build_parsing_table(G, firsts=None, follows=None):
+    '''
+    Calcula la tabla de parseo LL(1) de una gramatica `G`
+
+    Parametros
+    ----------
+        `G`: La gramatica a la que se le hallara la tabla LL(1). Debe ser `Grammar`
+        `firsts`: Diccionario de todos los Firsts por Producciones, No-terminales y Terminales
+        `follows`: Diccionario de todos los Follows por No-Terminales
+    Retorna:
+    -----------
+        `M`: Tabla LL(1) asociada. Si la gramatica no es LL(1), retorna `None`
+    '''
+    if firsts is None:
+        firsts = compute_firsts(G)
+    if follows is None:
+        follows = compute_follows(G)
+
     M = {}
-    
-    # P: X -> alpha
     for production in G.Productions:
         X = production.Left
         alpha = production.Right
         
-        ###################################################
-        # working with symbols on First(alpha) ...
-        ###################################################
-        #                   <CODE_HERE>                   #
-        ###################################################
         firsts_alpha = firsts[alpha]
         follows_X = follows[X]
-        for t in firsts_alpha:            
+        for t in firsts_alpha: 
+            # Se comprueba que en la tabla LL(1) no haya algo asignado primero
+            if M.get((X,t), None) is not None:                
+                print(f'La gramatica {G}, no es LL(1)')
+                return None
             M[X, t] = [production]
-        ###################################################
-        # working with epsilon...
-        ###################################################
-        #                   <CODE_HERE>                   #
-        ###################################################
-        if G.Epsilon is firsts_alpha or alpha.IsEpsilon:
-            for t in follows_X:            
-                M[X, t] = [production]
 
-    # parsing table is ready!!!
+        if G.Epsilon is firsts_alpha or alpha.IsEpsilon:
+            for t in follows_X:
+                # Se comprueba que en la tabla LL(1) no haya algo asignado primero
+                if M.get((X,t), None) is not None:                
+                    print(f'La gramatica {G}, no es LL(1)')
+                    return None
+                M[X, t] = [production]
     return M  
