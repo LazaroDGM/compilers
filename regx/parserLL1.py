@@ -1,4 +1,4 @@
-from pycompiler import ContainerSet, Grammar, Production, Sentence
+from pycompiler import ContainerSet, Grammar, Production, Sentence, EOF
 
 def compute_local_first(firsts: dict, alpha):
     '''
@@ -210,7 +210,7 @@ def parser_LL1_generator(G, M=None, firsts=None, follows=None):
         
         while len(stack) > 0:
             top = stack.pop()
-            a = w[cursor]
+            a = w[cursor].token_type
             if a == top:                                
                 cursor += 1
                 if cursor == len(w):
@@ -226,3 +226,49 @@ def parser_LL1_generator(G, M=None, firsts=None, follows=None):
         return output
         
     return parser
+
+def evaluate_parse(left_parse, tokens):
+    '''
+    Evaluador de gramaticas atributadas.
+
+    Parametros:
+    ------------
+        `left_parse`: Iterable de las Producciones del parseo realizado
+        `tokens`: Iterable de los tokens que generaron la cadena de producciones
+
+    Retorna:
+    ------------
+        `result`: El resultado de evaluar la gramatica. Este depende de la definicion de sus atributos
+    '''
+    if not left_parse or not tokens:
+        return
+    
+    left_parse = iter(left_parse)
+    tokens = iter(tokens)
+    result = evaluate(next(left_parse), left_parse, tokens)
+    
+    assert isinstance(next(tokens).token_type, EOF)
+    return result
+    
+
+def evaluate(production, left_parse, tokens, inherited_value=None):
+    head, body = production
+    attributes = production.attributes
+    
+    synteticed = [None] * len(attributes)
+    inherited = [None] * len(attributes)
+    inherited[0] = inherited_value
+
+    for i, symbol in enumerate(body, 1):
+        if symbol.IsTerminal:
+            assert inherited[i] is None            
+            token = next(tokens) 
+            synteticed[i] = token.lex
+        else:
+            next_production = next(left_parse)
+            assert symbol == next_production.Left            
+            if attributes[i] is not None:
+                inherited[i] = attributes[i](inherited, synteticed)
+            synteticed[i] = evaluate(next_production, left_parse, tokens, inherited_value=inherited[i])
+        
+    return attributes[0](inherited, synteticed)
