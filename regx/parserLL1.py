@@ -43,6 +43,10 @@ def compute_firsts(G: Grammar):
     Parametros
     ----------
         `G`: La gramatica a la que se le hallara el conjunto First. Debe ser `Grammar`
+
+    Retorna
+    --------------
+        `firsts`: Diccionario de todos los Firsts por Producciones, No-terminales y Terminales
     '''
     firsts = {}
     change = True
@@ -81,6 +85,10 @@ def compute_follows(G, firsts):
     -------------
         `G`: La gramatica a la que se le hallara los conjuntos Follows. Debe ser `Grammar`
         `firsts`: Diccionario de todos los Firsts de la gramatica
+    
+    Retorna
+    --------------
+        `follows`: Diccionario de todos los Follows por No-Terminales
     '''
     follows = { }
     change = True
@@ -111,3 +119,50 @@ def compute_follows(G, firsts):
                         change = change or follows[A].update(follow_X)    
     return follows
 
+def compute_first_follows(G):
+    '''
+    Calcula todos los conjuntos Firsts y Follows de una gramatica
+
+    Parametros:
+    -------------
+        `G`: La gramatica a la que se le hallara ambos conjuntos. Debe ser `Grammar`
+
+    Retorna:
+    -------------
+        `firsts`: Diccionario de todos los Firsts por Producciones, No-terminales y Terminales
+        `follows`: Diccionario de todos los Follows por No-Terminales
+    '''
+    firsts = compute_firsts(G)
+    follows = compute_follows(G, firsts)
+    return firsts, follows
+
+
+def build_parsing_table(G, firsts, follows):
+    # init parsing table
+    M = {}
+    
+    # P: X -> alpha
+    for production in G.Productions:
+        X = production.Left
+        alpha = production.Right
+        
+        ###################################################
+        # working with symbols on First(alpha) ...
+        ###################################################
+        #                   <CODE_HERE>                   #
+        ###################################################
+        firsts_alpha = firsts[alpha]
+        follows_X = follows[X]
+        for t in firsts_alpha:            
+            M[X, t] = [production]
+        ###################################################
+        # working with epsilon...
+        ###################################################
+        #                   <CODE_HERE>                   #
+        ###################################################
+        if G.Epsilon is firsts_alpha or alpha.IsEpsilon:
+            for t in follows_X:            
+                M[X, t] = [production]
+
+    # parsing table is ready!!!
+    return M  
