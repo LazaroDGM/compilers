@@ -1,6 +1,18 @@
 from pycompiler import ContainerSet, Grammar
 
-def compute_local_first(firsts, alpha):
+def compute_local_first(firsts: dict, alpha):
+    '''
+    Calcula los firsts de la forma oracional `alpha`, para un conjunto de first actuales
+
+    Parametros
+    -----------
+        `firsts`: Diccionario de formas oracaionales y firsts
+        `alpha`: Forma oracional
+
+    Retorna
+    -----------
+        `first_alpha`: El conjunto de no terminales obtenidos, dentro de un `ContainerSet`
+    '''
     first_alpha = ContainerSet()
     
     try:
@@ -24,7 +36,14 @@ def compute_local_first(firsts, alpha):
         
     return first_alpha
 
-def compute_firsts(G):
+def compute_firsts(G: Grammar):
+    '''
+    Calcula el First de todas las formas oracionales de la gramatica `G`
+
+    Parametros
+    ----------
+        `G`: La gramatica a la que se le hallara el conjunto First. Debe ser `Grammar`
+    '''
     firsts = {}
     change = True
         
@@ -54,6 +73,15 @@ def compute_firsts(G):
     return firsts
 
 def compute_follows(G, firsts):
+    '''
+    Funcion para calcular el Follow de todos los No-Terminales de la gramatica `G`
+    dado el conjunto de todos los Firsts
+
+    Parametros
+    -------------
+        `G`: La gramatica a la que se le hallara los conjuntos Follows. Debe ser `Grammar`
+        `firsts`: Diccionario de todos los Firsts de la gramatica
+    '''
     follows = { }
     change = True
     
