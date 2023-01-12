@@ -161,3 +161,43 @@ def nfa_to_dfa(automaton):
     finals = [ state.id for state in states if state.is_final ]
     dfa = DFA(len(states), finals, transitions)
     return dfa
+
+def automata_union(a1, a2):
+    '''
+    Union de Automatas. Se genera un Automata Finito No Determinista Union
+    de 2 automatas
+
+    Parametros:
+    ------------
+        `a1`: Automata 1, debe ser un `NFA`
+        `a2`: Automata 2, debe ser un `NFA`
+
+    Retorna:
+    ---------
+        `union`: Automata Union (`NFA`)
+    '''
+    transitions = {}
+    
+    start = 0
+    d1 = 1
+    d2 = a1.states + d1
+    final = a2.states + d2
+    
+    for (origin, symbol), destinations in a1.map.items():
+        transitions[origin + d1, symbol] = [dest + d1 for dest in destinations]
+        
+    for (origin, symbol), destinations in a2.map.items():        
+        transitions[origin + d2, symbol] = [dest + d2 for dest in destinations]
+        
+    transitions[start, ''] = [d1, d2]
+    
+    for f1 in a1.finals:
+        transitions[f1 + d1, ''] = [final]
+    for f2 in a2.finals:
+        transitions[f2 + d2, ''] = [final]
+            
+    states = a1.states + a2.states + 2
+    finals = { final }
+    
+    return NFA(states, finals, transitions, start)
+
