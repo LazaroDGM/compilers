@@ -1,6 +1,6 @@
-from automata import NFA, automata_union, automata_concatenation, automata_closure, automata_positive_closure
+from automata import NFA, automata_union, automata_concatenation, automata_closure, automata_positive_closure, nfa_to_dfa
 from pycompiler import Grammar, Token
-from parserLL1 import parser_LL1_generator
+from parserLL1 import parser_LL1_generator, evaluate_parse
 ########## Clases Base para los nodos del AST ##########
 
 class Node:
