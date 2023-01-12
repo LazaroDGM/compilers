@@ -270,3 +270,36 @@ def automata_closure(a1):
     finals = { final }
     
     return NFA(states, finals, transitions, start)
+
+def automata_positive_closure(a1):
+    '''
+    Clausura Positiva de Automata. Se genera un Automata Finito No Determinista
+    Clausura Positiva de un automata
+
+    Parametros:
+    ------------
+        `a1`: Automata 1, debe ser un `NFA`        
+
+    Retorna:
+    ---------
+        `closure`: Automata Clausura Positiva (`NFA`)
+    '''
+    transitions = {}
+    
+    start = 0
+    d1 = 1
+    final = a1.states + d1
+    
+    for (origin, symbol), destinations in a1.map.items():
+        transitions[origin + d1, symbol] = [dest + d1 for dest in destinations]        
+
+    transitions[start, ''] = [d1] 
+
+    for f1 in a1.finals:
+        transitions[f1 + d1, ''] = [final]
+    transitions[final, ''] = [start]
+            
+    states = a1.states +  2
+    finals = { final }
+    
+    return NFA(states, finals, transitions, start)
