@@ -210,7 +210,7 @@ def parser_LL1_generator(G, M=None, firsts=None, follows=None):
         
         while len(stack) > 0:
             top = stack.pop()
-            a = w[cursor]
+            a = w[cursor].token_type
             if a == top:                                
                 cursor += 1
                 if cursor == len(w):

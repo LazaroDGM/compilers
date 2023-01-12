@@ -1,5 +1,6 @@
 from automata import NFA, automata_union, automata_concatenation, automata_closure, automata_positive_closure
-from pycompiler import Grammar
+from pycompiler import Grammar, Token
+from parserLL1 import parser_LL1_generator
 ########## Clases Base para los nodos del AST ##########
 
 class Node:
@@ -117,6 +118,15 @@ def GrammarRegexSimple():
     T, F, A, X, Y, Z = G.NonTerminals('T F A X Y Z')
     pipe, star, opar, cpar, symbol, epsilon = G.Terminals('| * ( ) symbol ε')
 
+    G._fixed_tokens = {
+        '*': Token('*', star),
+        '|': Token('|', pipe),
+        '(': Token('(', opar),
+        ')': Token(')', cpar),
+        'ε': Token('ε', epsilon),
+    }
+    G._symbol = symbol
+
     E %= T + X, lambda h,s: s[2], None, lambda h,s: s[1]
 
     X %= pipe + E, lambda h,s: UnionNode(h[0], s[2]), None, None
@@ -138,3 +148,18 @@ def GrammarRegexSimple():
 
     return G
 
+def regex_tokenizer(text, G, skip_whitespaces=True):
+    tokens = []
+
+    fixed_tokens = G._fixed_tokens
+    for char in text:
+        if skip_whitespaces and char.isspace():
+            continue
+        # Your code here!!!
+        token = fixed_tokens.get(char, None)
+        if token is None:
+            token =  Token(char, G._symbol)
+        tokens.append(token)
+
+    tokens.append(Token('$', G.EOF))
+    return tokens
