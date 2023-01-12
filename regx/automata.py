@@ -56,3 +56,250 @@ class DFA(NFA):
         if self.current in self.finals:
             return True
         return False
+
+def move(automaton, states, symbol):
+    '''
+    Dado un conjunto de estados Q' y un simbolo se computan todos los posibles
+    nodos a los que se puede llegar desde los estados de Q', utilizando al simbolo
+    en cuestion como paso de transicion
+
+    Sea Q' subconjunto de los estados Q:
+    GOTO(Q', c) = {q_j de Q | q_i en Q', q_j este en t(q_i, c)}
+
+    Parametros
+    ------------
+    `automaton`: Automata
+    `states`: Conjunto de estados
+    `symbol`: Simbolo de transicion
+
+    Return
+    -----------
+    `new_states`: Conjunto de estados de `automaton` resultantes
+    '''
+    moves = set()
+    for state in states:        
+        next_states = automaton.transitions[state].get(symbol, [])
+        moves.update(next_states)
+    return moves
+
+def epsilon_closure(automaton, states):
+    '''
+    Funcion recursiva que calcula al epsilon-Clasura de un conjunto de estados
+    en un automata. Este nuevo conjunto esta formado por todos los estados del
+    conjunto actual, mas los estados a los que se puede llegar haciendo tantas
+    transiciones con epsilon como sean posibles.
+
+    Parametros
+    ------------
+    `automaton`: Automata
+    `states`: Conjunto de estados
+
+    Return
+    -----------
+    `new_states`: Conjunto de estados de `automaton` resultantes
+    '''    
+    pending = list(states)
+    closure = set(states)
+    
+    while pending:
+        state = pending.pop()        
+        news_states = automaton.transitions[state].get('', [])        
+        closure.update(epsilon_closure(automaton, news_states))
+                
+    return set(closure)
+
+def nfa_to_dfa(automaton):
+    '''
+    Funcion para convertir un automata finito no determinista en un automata finito determinista.
+    Usa las funciones `move` (Goto) y `epsilon_closure` (epsilonClausura).
+
+    Parametros
+    ------------
+    `automaton`: Automata
+
+    Return
+    -----------
+    `new_automaton`: Nuevo automata finito determinista
+    '''
+    class Container(set):
+        def __init_subclass__(cls) -> None:
+            return super().__init_subclass__()    
+        id = -1
+        is_final = False
+
+    transitions = {}
+    
+    start = Container(epsilon_closure(automaton, [automaton.start]))
+    start.id = 0
+    start.is_final = any(s in automaton.finals for s in start)
+    states = [ start ]
+
+    pending = [ start ]
+    while pending:
+        state = pending.pop()
+
+        for symbol in automaton.vocabulary:            
+            _move = move(automaton= automaton, states= state, symbol= symbol)
+            _closure = Container(epsilon_closure(automaton, _move))
+
+            if len(_closure) == 0:
+                continue
+            if _closure not in states:
+                _closure.id = len(states)
+                _closure.is_final = any(s in automaton.finals for s in _closure)
+                pending.append(_closure)
+                states.append(_closure)
+            else:
+                _closure.id = states.index(_closure)
+
+            try:
+                transitions[state.id, symbol]
+                assert False, 'Invalid DFA!!!'
+            except KeyError:                             
+                transitions[state.id, symbol] = _closure.id                
+    
+    finals = [ state.id for state in states if state.is_final ]
+    dfa = DFA(len(states), finals, transitions)
+    return dfa
+
+def automata_union(a1, a2):
+    '''
+    Union de Automatas. Se genera un Automata Finito No Determinista Union
+    de 2 automatas
+
+    Parametros:
+    ------------
+        `a1`: Automata 1, debe ser un `NFA`
+        `a2`: Automata 2, debe ser un `NFA`
+
+    Retorna:
+    ---------
+        `union`: Automata Union (`NFA`)
+    '''
+    transitions = {}
+    
+    start = 0
+    d1 = 1
+    d2 = a1.states + d1
+    final = a2.states + d2
+    
+    for (origin, symbol), destinations in a1.map.items():
+        transitions[origin + d1, symbol] = [dest + d1 for dest in destinations]
+        
+    for (origin, symbol), destinations in a2.map.items():        
+        transitions[origin + d2, symbol] = [dest + d2 for dest in destinations]
+        
+    transitions[start, ''] = [d1, d2]
+    
+    for f1 in a1.finals:
+        transitions[f1 + d1, ''] = [final]
+    for f2 in a2.finals:
+        transitions[f2 + d2, ''] = [final]
+            
+    states = a1.states + a2.states + 2
+    finals = { final }
+    
+    return NFA(states, finals, transitions, start)
+
+def automata_concatenation(a1, a2):
+    '''
+    Concatenacion de Automatas. Se genera un Automata Finito No Determinista Concatenacion
+    de 2 automatas
+
+    Parametros:
+    ------------
+        `a1`: Automata 1, debe ser un `NFA`
+        `a2`: Automata 2, debe ser un `NFA`
+
+    Retorna:
+    ---------
+        `concat`: Automata Concatenacion (`NFA`)
+    '''
+    transitions = {}
+    
+    start = 0
+    d1 = 0
+    d2 = a1.states + d1
+    final = a2.states + d2
+    
+    for (origin, symbol), destinations in a1.map.items():
+        transitions[origin + d1, symbol] = [dest + d1 for dest in destinations]
+
+    for (origin, symbol), destinations in a2.map.items():
+        transitions[origin + d2, symbol] = [dest + d2 for dest in destinations]
+
+    for f1 in a1.finals:
+        transitions[f1 + d1, ''] = [d2]
+    for f2 in a2.finals:
+        transitions[f2 + d2, ''] = [final]
+    
+    states = a1.states + a2.states + 1
+    finals = { final }
+    
+    return NFA(states, finals, transitions, start)
+
+def automata_closure(a1):
+    '''
+    Clausura de Automata. Se genera un Automata Finito No Determinista Clausura
+    de un automata
+
+    Parametros:
+    ------------
+        `a1`: Automata 1, debe ser un `NFA`        
+
+    Retorna:
+    ---------
+        `closure`: Automata Clausura (`NFA`)
+    '''
+    transitions = {}
+    
+    start = 0
+    d1 = 1
+    final = a1.states + d1
+    
+    for (origin, symbol), destinations in a1.map.items():
+        transitions[origin + d1, symbol] = [dest + d1 for dest in destinations]        
+    
+    transitions[start, ''] = [d1, final] 
+    
+    for f1 in a1.finals:
+        transitions[f1 + d1, ''] = [final]
+    transitions[final, ''] = [start]
+            
+    states = a1.states +  2
+    finals = { final }
+    
+    return NFA(states, finals, transitions, start)
+
+def automata_positive_closure(a1):
+    '''
+    Clausura Positiva de Automata. Se genera un Automata Finito No Determinista
+    Clausura Positiva de un automata
+
+    Parametros:
+    ------------
+        `a1`: Automata 1, debe ser un `NFA`        
+
+    Retorna:
+    ---------
+        `closure`: Automata Clausura Positiva (`NFA`)
+    '''
+    transitions = {}
+    
+    start = 0
+    d1 = 1
+    final = a1.states + d1
+    
+    for (origin, symbol), destinations in a1.map.items():
+        transitions[origin + d1, symbol] = [dest + d1 for dest in destinations]        
+
+    transitions[start, ''] = [d1] 
+
+    for f1 in a1.finals:
+        transitions[f1 + d1, ''] = [final]
+    transitions[final, ''] = [start]
+            
+    states = a1.states +  2
+    finals = { final }
+    
+    return NFA(states, finals, transitions, start)
