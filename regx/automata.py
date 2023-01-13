@@ -126,8 +126,10 @@ def epsilon_closure(automaton, states):
     
     while pending:
         state = pending.pop()        
-        news_states = automaton.transitions[state].get('', [])        
-        closure.update(epsilon_closure(automaton, news_states))
+        news_states = set(automaton.transitions[state].get('', []))
+        difference = news_states.difference(closure)
+        pending.extend(difference)
+        closure.update(difference)
                 
     return set(closure)
 
@@ -414,13 +416,16 @@ def automata_union(a1, a2):
         
     for (origin, symbol), destinations in a2.map.items():        
         transitions[origin + d2, symbol] = [dest + d2 for dest in destinations]
-        
-    transitions[start, ''] = [d1, d2]
+
+    trans = transitions.get((start, ''), [])
+    transitions[start, ''] = trans + [d1, d2]
     
     for f1 in a1.finals:
-        transitions[f1 + d1, ''] = [final]
+        trans = transitions.get((f1 + d1, ''), [])
+        transitions[f1 + d1, ''] = trans + [final]
     for f2 in a2.finals:
-        transitions[f2 + d2, ''] = [final]
+        trans = transitions.get((f2 + d2, ''), [])
+        transitions[f2 + d2, ''] = trans + [final]
             
     states = a1.states + a2.states + 2
     finals = { final }
@@ -455,9 +460,11 @@ def automata_concatenation(a1, a2):
         transitions[origin + d2, symbol] = [dest + d2 for dest in destinations]
 
     for f1 in a1.finals:
-        transitions[f1 + d1, ''] = [d2]
+        trans = transitions.get((f1 + d1, ''), [])
+        transitions[f1 + d1, ''] = trans + [d2]
     for f2 in a2.finals:
-        transitions[f2 + d2, ''] = [final]
+        trans = transitions.get((f2 + d2, ''), [])
+        transitions[f2 + d2, ''] = trans + [final]
     
     states = a1.states + a2.states + 1
     finals = { final }
@@ -489,7 +496,8 @@ def automata_closure(a1):
     transitions[start, ''] = [d1, final] 
     
     for f1 in a1.finals:
-        transitions[f1 + d1, ''] = [final]
+        trans = transitions.get((f1 + d1, ''), [])
+        transitions[f1 + d1, ''] = trans + [final]
     transitions[final, ''] = [start]
             
     states = a1.states +  2
