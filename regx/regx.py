@@ -175,9 +175,12 @@ class RegexSimple():
         self._left_parse = self._parser(self._tokens)
         self._ast = evaluate_parse(self._left_parse, self._tokens)
         self._nfa = self._ast.evaluate()
-        self._nfa.graph().write_png('nfa.png')
+        #self._nfa.graph().write_png('nfa.png')
         self._dfa = nfa_to_dfa(self._nfa)
-        self._dfa.graph().write_png('dfa.png')
+        #self._dfa.graph().write_png('dfa.png')
 
     def recognize(self, text):
         return self._dfa.recognize(text)
+
+    def automaton(self):
+        return self._dfa
