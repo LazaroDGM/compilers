@@ -51,4 +51,63 @@ def build_LR0_automaton(G: Grammar):
             current_state.add_epsilon_transition(visited[no_kernel])            
 
     return automaton
+
+class ShiftReduceParser:
+    SHIFT = 'SHIFT'
+    REDUCE = 'REDUCE'
+    OK = 'OK'
     
+    def __init__(self, G, verbose=False):
+        self.G = G
+        self.verbose = verbose
+        self.action = {}
+        self.goto = {}
+        self._build_parsing_table()
+    
+    def _build_parsing_table(self):
+        raise NotImplementedError()
+
+    def __call__(self, w):
+        stack = [ 0 ]
+        cursor = 0
+        output = []
+        count= 1
+        while True:
+            state = stack[-1]
+            lookahead = w[cursor]
+            if self.verbose: print(stack, '<---||--->', w[cursor:], count)
+            count+=1
+                            
+            lookahead = lookahead.Name
+            if (state, lookahead) not in self.action.keys():
+                ##########################TODO###########################
+                # Mejorar la informacion al detectar error en la cadena #
+                #########################################################
+                raise Exception(f'No se puede parsear la cadena. No se esperaba un token {lookahead}')
+            
+            action, tag = self.action[state, lookahead]
+            
+            # SHIFT
+            if action == ShiftReduceParser.SHIFT:
+                stack.append(lookahead)
+                stack.append(tag)
+                cursor += 1
+
+            # REDUCE
+            elif action == ShiftReduceParser.REDUCE:
+                left, right = production = self.G.Productions[tag]
+                count_delete = 2 * len(right)
+                for i in range(count_delete):
+                    stack.pop()
+                new_state = self.goto[stack[-1], left.Name]
+                stack.append(left.Name)
+                stack.append(new_state)
+                output.append(production)
+
+            # ACCEPT
+            elif action == ShiftReduceParser.OK:
+                return output
+
+            # INVALID 
+            else:
+                raise Exception('Invalid')
