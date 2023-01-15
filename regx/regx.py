@@ -1,6 +1,6 @@
-from automata import NFA, automata_union, automata_concatenation, automata_closure, automata_positive_closure
+from automata import NFA, automata_union, automata_concatenation, automata_closure, automata_positive_closure, nfa_to_dfa
 from pycompiler import Grammar, Token
-from parserLL1 import parser_LL1_generator
+from parserLL1 import parser_LL1_generator, evaluate_parse
 ########## Clases Base para los nodos del AST ##########
 
 class Node:
@@ -66,6 +66,7 @@ class ClosureNode(UnaryNode):
     @staticmethod
     def operate(value):
         closure = automata_closure(value)
+        #closure.graph().write_png('closure.png')
         return closure
 
 class PositiveClosureNode(UnaryNode):
@@ -78,12 +79,14 @@ class UnionNode(BinaryNode):
     @staticmethod
     def operate(lvalue, rvalue):                
         union = automata_union(lvalue, rvalue)
+        #union.graph().write_png('union.png')
         return union
 
 class ConcatNode(BinaryNode):
     @staticmethod
     def operate(lvalue, rvalue):        
         concat = automata_concatenation(lvalue, rvalue)
+        #concat.graph().write_png('concat.png')
         return concat
 
 ############### Gramatica de REGEX ####################
@@ -154,8 +157,7 @@ def regex_tokenizer(text, G, skip_whitespaces=True):
     fixed_tokens = G._fixed_tokens
     for char in text:
         if skip_whitespaces and char.isspace():
-            continue
-        # Your code here!!!
+            continue        
         token = fixed_tokens.get(char, None)
         if token is None:
             token =  Token(char, G._symbol)
@@ -163,3 +165,22 @@ def regex_tokenizer(text, G, skip_whitespaces=True):
 
     tokens.append(Token('$', G.EOF))
     return tokens
+
+class RegexSimple():
+    def __init__(self, regular_exp, skip_whitespaces= False) -> None:
+        self.exregular_expp = regular_exp
+        self._grammer = GrammarRegexSimple()
+        self._parser = parser_LL1_generator(self._grammer)
+        self._tokens = regex_tokenizer(regular_exp, self._grammer, skip_whitespaces=skip_whitespaces)
+        self._left_parse = self._parser(self._tokens)
+        self._ast = evaluate_parse(self._left_parse, self._tokens)
+        self._nfa = self._ast.evaluate()
+        #self._nfa.graph().write_png('nfa.png')
+        self._dfa = nfa_to_dfa(self._nfa)
+        #self._dfa.graph().write_png('dfa.png')
+
+    def recognize(self, text):
+        return self._dfa.recognize(text)
+
+    def automaton(self):
+        return self._dfa
