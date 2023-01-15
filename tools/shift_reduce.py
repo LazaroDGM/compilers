@@ -67,6 +67,11 @@ class ShiftReduceParser:
     def _build_parsing_table(self):
         raise NotImplementedError()
 
+    @staticmethod
+    def _register(table, key, value):
+        assert key not in table or table[key] == value, 'Shift-Reduce or Reduce-Reduce conflict!!!'
+        table[key] = value
+
     def __call__(self, w):
         stack = [ 0 ]
         cursor = 0
@@ -111,3 +116,54 @@ class ShiftReduceParser:
             # INVALID 
             else:
                 raise Exception('Invalid')
+
+class SLR1Parser(ShiftReduceParser):
+
+    def _build_parsing_table(self):
+        G = self.G.AugmentedGrammar(True)
+        firsts = compute_firsts(G)
+        follows = compute_follows(G, firsts)
+        
+        automaton = build_LR0_automaton(G).to_deterministic()
+        for i, node in enumerate(automaton):
+            if self.verbose: print(i, '\t', '\n\t '.join(str(x) for x in node.state), '\n')
+            node.idx = i
+
+        for node in automaton:
+            idx = node.idx
+            for state in node.state:
+                item = state.state                
+
+                if not item.IsReduceItem:
+                    symbol =  item.NextSymbol
+                    if symbol.IsTerminal:                        
+                        node_transition = node.transitions.get(symbol.Name, None)
+                        if node_transition is not None:
+                            assert len(node_transition) == 1, 'Automata No Determinista.'
+                            self._register(self.action,
+                                        (idx, item.NextSymbol.Name),
+                                        (ShiftReduceParser.SHIFT, node_transition[0].idx))
+                    else:
+                        node_transition = node.transitions.get(symbol.Name, None)
+                        if node_transition is not None:
+                            assert len(node_transition) == 1, 'Automata no determinista.'
+                            self._register(self.goto,
+                                        (idx, item.NextSymbol.Name),
+                                        (node_transition[0].idx))                    
+                else:
+                    left, right = production = item.production
+                    k = G.Productions.index(production)
+                    if left.Name == G.startSymbol.Name:
+                        k = G.Productions.index(item.production)
+                        self._register(self.action,
+                            (idx, G.EOF.Name),
+                            (ShiftReduceParser.OK, k))                    
+                    for terminal in follows[left]:
+                        ################TODO##############
+                        # Mejorar la actualizacion de OK #
+                        ##################################
+                        if terminal == G.EOF and left.Name == G.startSymbol.Name:
+                            continue
+                        self._register(self.action,
+                                    (idx, terminal.Name),
+                                    (ShiftReduceParser.REDUCE, k))
