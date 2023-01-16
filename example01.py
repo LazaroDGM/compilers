@@ -63,7 +63,7 @@ class PowNode(BinaryNode):
 G = Grammar()
 E = G.NonTerminal('E', True)
 T, F, X, Y = G.NonTerminals('T F X Y')
-plus, minus, star, div, opar, cpar, operpow, num = G.Terminals('+ - * / ( ) ^ num')
+plus, minus, star, div, opar, cpar, num = G.Terminals('+ - * / ( ) num')
 
 
 E %= T + X, lambda h,s: s[2], None, lambda h,s: s[1]
@@ -85,3 +85,18 @@ F %= opar + E + cpar, lambda h, s: s[2], None, None, None
 # ==================================================== #
 ########################################################
 
+lexer = Lexer(
+    [
+        ('num', '(1|2|3|4|5|6|7|8|9)(0|1|2|3|4|5|6|7|8|9)*'),
+
+        ('space', '( |\t|\n)( |\t|\n)*'),
+
+        ('+', '\+'),
+        ('-', '-'),
+        ('*', '\*'),
+        ('/', '/'),
+
+        ('(', '\('),
+        (')', '\)'),                
+    ], '$'
+)
