@@ -1,6 +1,6 @@
 from automata import State
-from pycompiler import Grammar, Item
-from parserLL1 import compute_first_follows, compute_firsts, compute_follows
+from pycompiler import Grammar, Item, ContainerSet
+from parserLL1 import compute_first_follows, compute_firsts, compute_follows, compute_local_first
 
 def build_LR0_automaton(G: Grammar):
     '''
@@ -57,7 +57,7 @@ class ShiftReduceParser:
     REDUCE = 'REDUCE'
     OK = 'OK'
     
-    def __init__(self, G, verbose=False):
+    def __init__(self, G: Grammar, verbose=False):
         self.G = G
         self.verbose = verbose
         self.action = {}
@@ -167,3 +167,37 @@ class SLR1Parser(ShiftReduceParser):
                         self._register(self.action,
                                     (idx, terminal.Name),
                                     (ShiftReduceParser.REDUCE, k))
+
+def expand(item, firsts):
+    '''
+    Esta recibe un item LR(1) y devuelve el conjunto de items
+    que sugiere incluir (directamente) debido a la presencia de un `.`
+    delante de un no terminal.
+    
+    Parametros
+    --------------
+        `item`: Item LR(1) a expandir
+        `firsts`: El conjunto de firsts
+
+    Retorna:
+    --------------
+        `lookaheads`: El conjunto de las producciones sugeridas,
+        con los lookaheads que pertenecen al Firsts del resto de la
+        formal oracional y su lookahead actual
+    '''
+    next_symbol = item.NextSymbol
+    if next_symbol is None or not next_symbol.IsNonTerminal:
+        return []
+    
+    lookaheads = ContainerSet()
+     
+    for preview in item.Preview():
+        local_firsts= compute_local_first(firsts, preview)
+        for production in next_symbol.productions:
+            new_item = Item(production, 0, local_firsts)
+            lookaheads.add(new_item)
+    
+    assert not lookaheads.contains_epsilon
+    
+    return list(lookaheads)
+
