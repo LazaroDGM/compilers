@@ -1,11 +1,7 @@
 from tools.parserLL1 import parser_LL1_generator, evaluate_parse
 from tools.lexer import Lexer
 from tools.pycompiler import Grammar, Terminal, NonTerminal, Token
-import tools.visitor as visitor
-
-class Node:
-    def evaluate(self):
-        raise NotImplementedError()
+from tools.ast import Node, BinaryNode, get_printer
 
 class ConstantNumberNode(Node):
     def __init__(self, lex):
@@ -14,38 +10,7 @@ class ConstantNumberNode(Node):
         
     def evaluate(self):        
         return self.value
-
-class AtomicNode(Node):
-    def __init__(self, lex):
-        self.lex = lex
-
-class UnaryNode(Node):
-    def __init__(self, node):
-        self.node = node
-
-    def evaluate(self):
-        value = self.node.evaluate()
-        return self.operate(value)
-
-    @staticmethod
-    def operate(value):
-        raise NotImplementedError()
-
-class BinaryNode(Node):
-    def __init__(self, left, right):
-        self.left = left
-        self.right = right
-
-    def evaluate(self):
-        lvalue = self.left.evaluate()
-        rvalue = self.right.evaluate()
-        return self.operate(lvalue, rvalue)
-
-    @staticmethod
-    def operate(lvalue, rvalue):
-        raise NotImplementedError()
         
-
 class PlusNode(BinaryNode):
     @staticmethod
     def operate(lvalue, rvalue):        
@@ -131,16 +96,34 @@ class Language01:
         parser = parser_LL1_generator(G)
         self.parser = parser
 
-    def Build_AST(self, text):
+        ########################################################
+        #                       PRINTER                        #
+        ########################################################
+        self.printer = get_printer(AtomicNode=ConstantNumberNode, BinaryNode=BinaryNode)
+
+
+    ####################################
+    #                AST               #
+    ####################################
+    def Build_AST(self, text, verbose=False):
         all_tokens = self.lexer(text)
         tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
         left_parse = self.parser(tokens)        
         ast = evaluate_parse(left_parse, tokens)
 
+        if verbose:
+            self.Print(ast)
         return ast
 
-    def Evaluate(self, text):
-        ast = self.Build_AST(text)
+    ####################################
+    #           EVALUATE               #
+    ####################################
+    def Evaluate(self, text, verbose= False):
+        ast = self.Build_AST(text, verbose)
         result = ast.evaluate()
 
-        return result
+        return result    
+    
+
+    def Print(self, ast):
+        print(self.printer(ast))
