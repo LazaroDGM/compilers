@@ -258,3 +258,26 @@ def closure_lr1(items, firsts):
         changed = closure.update(new_items)
         
     return compress(closure)
+
+def goto_lr1(items, symbol, firsts=None, just_kernel=False):
+    '''
+    La función recibe como parámetro un conjunto de items y un símbolo,
+    y devuelve el conjunto `goto(items, symbol)`, es decir la coleccion
+    de items a los que se puede acceder desde alguno de los itmes actuales
+    utilizando `symbol` como transicion.
+
+    Parametros
+    -----------
+        `items`: Conjunto de Items LR(1)
+        `symbol`: Simbolo por el que se quiere realizar la transicion
+        `firsts`: Firsts de la gramatica. Solo especificarlo si `just_kernel=True`
+        `just_kernel`: Para calcular solamente el conjunto de items kernels
+    
+    Retorna
+    ----------
+        `new_items`: Conjunto de Items a los que se puede llegar mediante el simbolo
+    '''
+
+    assert just_kernel or firsts is not None, '`firsts` must be provided if `just_kernel=False`'
+    items = frozenset(item.NextItem() for item in items if item.NextSymbol == symbol)
+    return items if just_kernel else closure_lr1(items, firsts)
