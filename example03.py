@@ -36,7 +36,7 @@ class Language03:
         )
         self.lexer = lexer
         ########################################################
-        #                    PARSER SLR(1)                     #
+        #                    PARSER LR(1)                     #
         ########################################################
         parser = LR1Parser(G)
         self.parser = parser
