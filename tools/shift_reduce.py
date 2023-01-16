@@ -331,3 +331,54 @@ def build_LR1_automaton(G):
             current_state.add_transition(symbol.Name, next_state)
         
     return automaton
+
+class LR1Parser(ShiftReduceParser):
+    '''
+    Parser LR(1) Shift-Reduce
+    '''
+
+    def _build_parsing_table(self):
+        G = self.G.AugmentedGrammar(True)
+        
+        automaton = build_LR1_automaton(G)
+        for i, node in enumerate(automaton):
+            if self.verbose: print(i, '\t', '\n\t '.join(str(x) for x in node.state), '\n')
+            node.idx = i
+
+        for node in automaton:
+            idx = node.idx
+            for item in node.state:
+
+                if not item.IsReduceItem:
+                    symbol =  item.NextSymbol
+                    if symbol.IsTerminal:                        
+                        node_transition = node.transitions.get(symbol.Name, None)
+                        if node_transition is not None:
+                            assert len(node_transition) == 1, 'Automata No Determinista.'
+                            self._register(self.action,
+                                        (idx, item.NextSymbol.Name),
+                                        (ShiftReduceParser.SHIFT, node_transition[0].idx))
+                    else:
+                        node_transition = node.transitions.get(symbol.Name, None)
+                        if node_transition is not None:
+                            assert len(node_transition) == 1, 'Automata no determinista.'
+                            self._register(self.goto,
+                                        (idx, item.NextSymbol.Name),
+                                        (node_transition[0].idx))                    
+                else:
+                    left, right = production = item.production
+                    k = G.Productions.index(production)
+                    if left.Name == G.startSymbol.Name:
+                        k = G.Productions.index(item.production)
+                        self._register(self.action,
+                            (idx, G.EOF.Name),
+                            (ShiftReduceParser.OK, k))                    
+                    for terminal in item.lookaheads:
+                        ################TODO##############
+                        # Mejorar la actualizacion de OK #
+                        ##################################
+                        if terminal == G.EOF and left.Name == G.startSymbol.Name:
+                            continue
+                        self._register(self.action,
+                                    (idx, terminal.Name),
+                                    (ShiftReduceParser.REDUCE, k))
