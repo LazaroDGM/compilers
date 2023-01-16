@@ -201,3 +201,28 @@ def expand(item, firsts):
     
     return list(lookaheads)
 
+def compress(items):
+    '''
+    Dado un conjunto de items LR(1) comprime aquellos con el mismo centro,
+    dejando el lookhead como una lista de la union de cada lookahead
+
+    Parametros:
+    ----------
+        `items`: Iterable de `Item` (representaciones de Items LR(1))
+    
+    Retorna:
+    --------
+        `items_compress`: Lista de Items ya comprimidos
+    '''
+
+    centers = {}
+
+    for item in items:
+        center = item.Center()
+        try:
+            lookaheads = centers[center]
+        except KeyError:
+            centers[center] = lookaheads = set()
+        lookaheads.update(item.lookaheads)
+    
+    return { Item(x.production, x.pos, set(lookahead)) for x, lookahead in centers.items() }
