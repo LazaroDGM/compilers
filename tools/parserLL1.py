@@ -1,4 +1,7 @@
-from pycompiler import ContainerSet, Grammar, Production, Sentence, EOF
+try:
+    from pycompiler import ContainerSet, Grammar, Production, Sentence, EOF
+except:
+    from tools.pycompiler import ContainerSet, Grammar, Production, Sentence, EOF
 
 def compute_local_first(firsts: dict, alpha):
     '''
