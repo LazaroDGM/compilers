@@ -1,6 +1,11 @@
-from automata import State
-from pycompiler import Grammar, Item, ContainerSet
-from parserLL1 import compute_first_follows, compute_firsts, compute_follows, compute_local_first
+try:
+    from automata import State
+    from pycompiler import Grammar, Item, ContainerSet, EOF
+    from parserLL1 import compute_first_follows, compute_firsts, compute_follows, compute_local_first
+except:
+    from tools.automata import State
+    from tools.pycompiler import Grammar, Item, ContainerSet, EOF
+    from tools.parserLL1 import compute_first_follows, compute_firsts, compute_follows, compute_local_first
 
 try:
     from pandas import DataFrame
@@ -81,6 +86,7 @@ class ShiftReduceParser:
         stack = [ 0 ]
         cursor = 0
         output = []
+        operations = []
         count= 1
         while True:
             state = stack[-1]
@@ -88,7 +94,7 @@ class ShiftReduceParser:
             if self.verbose: print(stack, '<---||--->', w[cursor:], count)
             count+=1
                             
-            lookahead = lookahead.Name
+            lookahead = lookahead.token_type.Name
             if (state, lookahead) not in self.action.keys():
                 ##########################TODO###########################
                 # Mejorar la informacion al detectar error en la cadena #
@@ -101,6 +107,7 @@ class ShiftReduceParser:
             if action == ShiftReduceParser.SHIFT:
                 stack.append(lookahead)
                 stack.append(tag)
+                operations.append(ShiftReduceParser.SHIFT)
                 cursor += 1
 
             # REDUCE
@@ -113,10 +120,11 @@ class ShiftReduceParser:
                 stack.append(left.Name)
                 stack.append(new_state)
                 output.append(production)
+                operations.append(ShiftReduceParser.REDUCE)
 
             # ACCEPT
             elif action == ShiftReduceParser.OK:
-                return output
+                return output, operations
 
             # INVALID 
             else:
@@ -387,6 +395,37 @@ class LR1Parser(ShiftReduceParser):
                         self._register(self.action,
                                     (idx, terminal.Name),
                                     (ShiftReduceParser.REDUCE, k))
+
+def evaluate_reverse_parse(right_parse, operations, tokens):
+    if not right_parse or not operations or not tokens:
+        return
+
+    right_parse = iter(right_parse)
+    tokens = iter(tokens)
+    stack = []
+    for operation in operations:
+        if operation == ShiftReduceParser.SHIFT:
+            token = next(tokens)
+            stack.append(token.lex)
+        elif operation == ShiftReduceParser.REDUCE:
+            production = next(right_parse)
+            head, body = production
+            attributes = production.attributes
+            assert all(rule is None for rule in attributes[1:]), 'There must be only synteticed attributes.'
+            rule = attributes[0]
+
+            if len(body):
+                synteticed = [None] + stack[-len(body):]
+                value = rule(None, synteticed)
+                stack[-len(body):] = [value]
+            else:
+                stack.append(rule(None, None))
+        else:
+            raise Exception('Invalid action!!!')
+
+    assert len(stack) == 1
+    assert isinstance(next(tokens).token_type, EOF)
+    return stack[0]
 
 def encode_value(value):
     try:

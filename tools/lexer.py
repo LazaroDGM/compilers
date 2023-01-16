@@ -1,6 +1,11 @@
-from pycompiler import Token
-from automata import State
-from regx import RegexSimple
+try:
+    from pycompiler import Token
+    from automata import State
+    from regx import RegexSimple
+except:
+    from tools.pycompiler import Token
+    from tools.automata import State
+    from tools.regx import RegexSimple
 
 class Lexer:
     def __init__(self, table, eof):
