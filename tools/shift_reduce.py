@@ -281,3 +281,53 @@ def goto_lr1(items, symbol, firsts=None, just_kernel=False):
     assert just_kernel or firsts is not None, '`firsts` must be provided if `just_kernel=False`'
     items = frozenset(item.NextItem() for item in items if item.NextSymbol == symbol)
     return items if just_kernel else closure_lr1(items, firsts)
+
+def build_LR1_automaton(G):
+    '''
+    Construye un Automata LR(1) (directamente se construye determinista).
+    Reconoce todos los prefijos viables de la Gramatica.
+    La Gramatica proporcionada debe tener el distinguido con una sola produccion.
+
+    Parametros:
+    ------------
+        `G`: Gramatica Aumentada
+
+    Retorna:
+    -----------
+        `automaton`: Automata Determinista LR(1)
+    '''
+
+    assert len(G.startSymbol.productions) == 1, 'Grammar must be augmented'
+    
+    firsts = compute_firsts(G)
+    firsts[G.EOF] = ContainerSet(G.EOF)
+    
+    start_production = G.startSymbol.productions[0]
+    start_item = Item(start_production, 0, lookaheads=(G.EOF,))
+    start = frozenset([start_item])
+    
+    closure = closure_lr1(start, firsts)
+    automaton = State(frozenset(closure), True)
+    
+    pending = [ start ]
+    visited = { start: automaton }
+    
+    while pending:
+        current = pending.pop()
+        current_state = visited[current]
+        
+        for symbol in G.terminals + G.nonTerminals:
+                       
+            goto = frozenset(goto_lr1(current_state.state, symbol, firsts))
+            if len(goto) == 0:
+                continue
+            if goto not in visited.keys():
+                next_state = State(goto, True)
+                visited[goto] = next_state
+                pending.append(goto)
+            else:
+                next_state = visited[goto]
+            
+            current_state.add_transition(symbol.Name, next_state)
+        
+    return automaton
