@@ -226,3 +226,35 @@ def compress(items):
         lookaheads.update(item.lookaheads)
     
     return { Item(x.production, x.pos, set(lookahead)) for x, lookahead in centers.items() }
+
+def closure_lr1(items, firsts):
+    '''
+    Computa la clausura de un conjunto LR(1). Esta clausura se va formando
+    recursivamente con la expansion de los items LR(1), cuyo simbolo despues
+    de `.` es un No Terminal.
+
+    Parametros:
+    ------------
+        `items`: Items LR(1)
+        `firsts`: Coleccion de los Firsts de la Gramatica
+
+    Retorna:
+    ------------
+        `closure`: Colecci'on de items resultantes comprimidos
+    '''
+    closure = ContainerSet(*items)
+    
+    changed = True
+    while changed:
+        changed = False
+        
+        new_items = ContainerSet()
+        
+        for item in closure:
+            if not item.IsReduceItem and item.NextSymbol.IsNonTerminal:
+                exp = expand(item, firsts)
+                new_items.extend(exp)
+
+        changed = closure.update(new_items)
+        
+    return compress(closure)
