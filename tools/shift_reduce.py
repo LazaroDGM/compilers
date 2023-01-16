@@ -94,7 +94,7 @@ class ShiftReduceParser:
             if self.verbose: print(stack, '<---||--->', w[cursor:], count)
             count+=1
                             
-            lookahead = lookahead.token_type
+            lookahead = lookahead.token_type.Name
             if (state, lookahead) not in self.action.keys():
                 ##########################TODO###########################
                 # Mejorar la informacion al detectar error en la cadena #
