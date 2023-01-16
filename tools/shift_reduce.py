@@ -2,6 +2,11 @@ from automata import State
 from pycompiler import Grammar, Item, ContainerSet
 from parserLL1 import compute_first_follows, compute_firsts, compute_follows, compute_local_first
 
+try:
+    from pandas import DataFrame
+except:
+    pass
+
 def build_LR0_automaton(G: Grammar):
     '''
     Construye un automata LR0 a partir de una gramatica. El automata creado
@@ -382,3 +387,28 @@ class LR1Parser(ShiftReduceParser):
                         self._register(self.action,
                                     (idx, terminal.Name),
                                     (ShiftReduceParser.REDUCE, k))
+
+def encode_value(value):
+    try:
+        action, tag = value
+        if action == ShiftReduceParser.SHIFT:
+            return 'S' + str(tag)
+        elif action == ShiftReduceParser.REDUCE:
+            return repr(tag)
+        elif action ==  ShiftReduceParser.OK:
+            return action
+        else:
+            return value
+    except TypeError:
+        return value
+
+def table_to_dataframe(table):
+    d = {}
+    for (state, symbol), value in table.items():
+        value = encode_value(value)
+        try:
+            d[state][symbol] = value
+        except KeyError:
+            d[state] = { symbol: value }
+
+    return DataFrame.from_dict(d, orient='index', dtype=str)
