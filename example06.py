@@ -15,10 +15,10 @@ class Language06:
         let_var, def_func, arg_list, let_const = G.NonTerminals('<let-var> <def-func> <arg-list> <let-const>')
         expr, term, factor, atom = G.NonTerminals('<expr> <term> <factor> <atom>')
         func_call, param_list, param = G.NonTerminals('<func-call> <param-list> <param>')
-        if_stat, while_stat, asign_stat = G.NonTerminals('<if-stat> <while-stat> <asign-stat>')
-        arg, cond_list, cond = G.NonTerminals('<arg> <cond-list> <cond>')
+        if_stat, while_stat, asign_stat, return_stat = G.NonTerminals('<if-stat> <while-stat> <asign-stat> <return-const>')
+        arg, comp_list, comp = G.NonTerminals('<arg> <comp-list> <comp>')
 
-        var, func, const = G.Terminals('var func const')
+        var, func, const, returnx = G.Terminals('var func const return')
         semi, comma, opar, cpar, arrow, okey, ckey, colon = G.Terminals('; , ( ) -> { } :')
         asign, plus, minus, star, div = G.Terminals('= + - * /')
         andx, orx = G.Terminals('&& ||')
@@ -39,36 +39,42 @@ class Language06:
         stat %= while_stat
         stat %= asign_stat
         stat %= def_func
+        stat %= return_stat       
 
         let_var %= var + typex + idx + asign + param
         let_var %= var + typex + idx
 
         let_const %= const + typex + idx + asign + param
 
+        asign_stat %= idx + asign + param
+
         def_func %= func + idx + opar + arg_list + cpar + arrow + typex + okey + stat_list + ckey
         def_func %= func + idx + opar + arg_list + cpar + okey + stat_list + ckey
 
-        if_stat %= ifx + opar + cond_list + cpar + colon + stat_list + endif
-        if_stat %= ifx + opar + cond_list + cpar + colon + stat_list + elsex + stat_list + endif
+        return_stat %= returnx + param
 
-        while_stat %= whilex + opar + cond_list + cpar + colon + stat_list + endwhile
+        if_stat %= ifx + opar + comp_list + cpar + colon + stat_list + endif
+        if_stat %= ifx + opar + comp_list + cpar + colon + stat_list + elsex + stat_list + endif
+
+        while_stat %= whilex + opar + comp_list + cpar + colon + stat_list + endwhile
 
         arg_list %= arg
         arg_list %= arg + comma + arg_list
 
         arg %= typex + idx
 
-        cond_list %= cond_list + andx + cond
-        cond_list %= cond_list + orx + cond
-        cond_list %= cond
+        comp_list %= comp_list + andx + comp
+        comp_list %= comp_list + orx + comp
+        comp_list %= comp
+        #cond_list %= expr
 
-        cond %= expr + eq + expr
-        cond %= expr + neq+ expr
-        cond %= expr + lte + expr
-        cond %= expr + gte + expr
-        cond %= expr + lt + expr
-        cond %= expr + gt + expr
-        cond %= opar + cond_list + cpar
+        comp %= expr + eq + expr
+        comp %= expr + neq+ expr
+        comp %= expr + lte + expr
+        comp %= expr + gte + expr
+        comp %= expr + lt + expr
+        comp %= expr + gt + expr
+        comp %= expr        
 
         expr %= expr + plus + term
         expr %= expr + minus + term
@@ -79,7 +85,8 @@ class Language06:
         term %= factor
 
         factor %= atom
-        factor %= opar + expr + cpar
+        
+        factor %= opar + comp_list + cpar
 
         atom %= num
         atom %= idx
@@ -91,9 +98,8 @@ class Language06:
 
         param_list %= param + comma + param_list
         param_list %= param
-
-        param %= expr
-        param %= cond_list
+        
+        param %= comp_list
 
         nonzero_digits = '|'.join(str(n) for n in range(1,10))
         letters_lower = '|'.join(chr(n) for n in range(ord('a'),ord('z')+1))
@@ -118,7 +124,8 @@ class Language06:
                 (endif,'endif'),
                 (elsex,'else'),
                 (whilex,'while'),
-                (endwhile,'endwhile'),        
+                (endwhile,'endwhile'),
+                (returnx, 'return'),    
 
                 (comma, ','),
                 (semi,';'),
@@ -156,7 +163,7 @@ class Language06:
 
         self.lexer = lexer
         ########################################################
-        #                    PARSER sLR(1)                     #
+        #                    PARSER SLR(1)                     #
         ########################################################
         parser = SLR1Parser(G)
         self.parser = parser
@@ -169,3 +176,4 @@ class Language06:
         tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
         right_parse, operations = self.parser(tokens)  
         return True 
+
