@@ -5,6 +5,8 @@ from utils06.utils import AsignVarNode, AtomicNode, BinaryNode, CallNode, Consta
 from utils06.utils import ConstDeclarationNode, DivNode, ExpressionNode, FuncDeclarationNode
 from utils06.utils import IfElseEndNode, IfEndNode, PlusNode, ProgramNode, ReturnNode, VarDeclarationNode
 from utils06.utils import MinusNode, StarNode, DivNode, VariableNode, BoolNode
+from utils06.utils import EqualNode, NotEqualNode, LessThanEqualNode, LessThanNode, GreaterEqualNode, GreaterNode
+from utils06.utils import AndNode, OrNode, WhileNode
 
 
 class Language06:
@@ -56,30 +58,30 @@ class Language06:
         def_func %= func + idx + opar + param_list + cpar + arrow + typex + okey + stat_list + ckey
         def_func %= func + idx + opar + param_list + cpar + okey + stat_list + ckey
 
-        return_stat %= returnx + arg
+        return_stat %= returnx + arg, lambda h,s: ReturnNode(s[2])
 
-        if_stat %= ifx + opar + comp_list + cpar + colon + stat_list + endif
-        if_stat %= ifx + opar + comp_list + cpar + colon + stat_list + elsex + stat_list + endif
+        if_stat %= ifx + opar + comp_list + cpar + colon + stat_list + endif, lambda h,s: IfEndNode(s[3], s[6])
+        if_stat %= ifx + opar + comp_list + cpar + colon + stat_list + elsex + stat_list + endif, lambda h,s: IfElseEndNode(s[3], s[6], s[8])
 
-        while_stat %= whilex + opar + comp_list + cpar + colon + stat_list + endwhile
+        while_stat %= whilex + opar + comp_list + cpar + colon + stat_list + endwhile, lambda h,s: WhileNode(s[3], s[6])
 
         param_list %= param
         param_list %= param + comma + param_list
 
         param %= typex + idx
 
-        comp_list %= comp_list + andx + comp
-        comp_list %= comp_list + orx + comp
-        comp_list %= comp
+        comp_list %= comp_list + andx + comp, lambda h,s: AndNode(s[1], s[3])
+        comp_list %= comp_list + orx + comp, lambda h,s: OrNode(s[1], s[3])
+        comp_list %= comp, lambda h,s: s[1]
         #cond_list %= expr
 
-        comp %= expr + eq + expr
-        comp %= expr + neq+ expr
-        comp %= expr + lte + expr
-        comp %= expr + gte + expr
-        comp %= expr + lt + expr
-        comp %= expr + gt + expr
-        comp %= expr        
+        comp %= expr + eq + expr, lambda h,s: EqualNode(s[1], s[3])
+        comp %= expr + neq+ expr, lambda h,s: NotEqualNode(s[1], s[3])
+        comp %= expr + lte + expr, lambda h,s: LessThanEqualNode(s[1], s[3])
+        comp %= expr + gte + expr, lambda h,s: GreaterEqualNode(s[1], s[3])
+        comp %= expr + lt + expr, lambda h,s: LessThanNode(s[1], s[3])
+        comp %= expr + gt + expr, lambda h,s: GreaterNode(s[1], s[3])
+        comp %= expr, lambda h,s: s[1]
 
         expr %= expr + plus + term, lambda h,s: PlusNode(left= s[1], right=s[3])
         expr %= expr + minus + term, lambda h,s: MinusNode(left= s[1], right=s[3])

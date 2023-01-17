@@ -52,7 +52,7 @@ class IfElseEndNode(StatementNode):
         self.statements_if = statements_if
         self.statements_else = statements_else
 
-class IfElseEndNode(StatementNode):
+class WhileNode(StatementNode):
     def __init__(self, cond, statements) -> None:        
         self.cond = cond
         self.statements = statements  
@@ -74,6 +74,34 @@ class BinaryNode(ExpressionNode):
     def __init__(self, left, right):
         self.left = left
         self.right = right
+
+##################################
+
+class AndNode(BinaryNode):
+    pass
+
+class OrNode(BinaryNode):
+    pass
+
+###################################
+
+class EqualNode(BinaryNode):
+    pass
+
+class NotEqualNode(BinaryNode):
+    pass
+
+class LessThanEqualNode(BinaryNode):
+    pass
+
+class GreaterEqualNode(BinaryNode):
+    pass
+
+class LessThanNode(BinaryNode):
+    pass
+
+class GreaterNode(BinaryNode):
+    pass
 
 ####################################
 
