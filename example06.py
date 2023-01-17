@@ -1,4 +1,4 @@
-from tools.shift_reduce import LR1Parser, evaluate_reverse_parse
+from tools.shift_reduce import LR1Parser, evaluate_reverse_parse, SLR1Parser, table_to_dataframe
 from tools.lexer import Lexer
 from tools.pycompiler import Grammar, Terminal, NonTerminal, Token
 
@@ -89,5 +89,53 @@ param_list %= param
 param %= expr
 param %= cond_list
 
+nonzero_digits = '|'.join(str(n) for n in range(1,10))
+letters_lower = '|'.join(chr(n) for n in range(ord('a'),ord('z')+1))
+letters_power = '|'.join(chr(n) for n in range(ord('A'),ord('Z')+1))
 
+Lexer(
+    [
+        ('space', '( |\t|\n)( |\t|\n)*'),
 
+        (var,'var'),
+        (const,'const'),
+        (func,'func'),
+        (ifx,'if'),
+        (endif,'endif'),
+        (elsex,'else'),
+        (whilex,'while'),
+        (endwhile,'endwhile'),        
+
+        (comma, ','),
+        (semi,';'),
+        (asign,'='),
+        (arrow,'->'),
+        (okey, '{'),
+        (ckey, '}'),
+        (opar, '\('),
+        (cpar,'\)'),
+        (colon,':'),
+
+        (plus,'\+'),
+        (minus,'-'),
+        (star, '\*'),
+        (div, '/'),
+
+        (andx, '&&'),
+        (orx, '\|\|'),
+
+        (eq,'=='),
+        (neq,'!='),
+        (lte,'<='),
+        (gte,'>='),
+        (lt,'<'),
+        (gt,'>'),
+
+        (boolx, '(True)|(False)'),
+        (num,f'({nonzero_digits})(0|{nonzero_digits})*'),
+        (typex, '(int)|(bool)'),
+        (idx, f'({letters_lower}|{letters_power})({letters_lower}|{letters_power})*')
+
+    ],
+    G.EOF
+)
