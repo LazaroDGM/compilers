@@ -1,6 +1,11 @@
 from tools.shift_reduce import LR1Parser, evaluate_reverse_parse, SLR1Parser, table_to_dataframe
 from tools.lexer import Lexer
 from tools.pycompiler import Grammar, Terminal, NonTerminal, Token
+from utils06.utils import AsignVarNode, AtomicNode, BinaryNode, CallNode, ConstantNumNode
+from utils06.utils import ConstDeclarationNode, DivNode, ExpressionNode, FuncDeclarationNode
+from utils06.utils import IfElseEndNode, IfEndNode, PlusNode, ProgramNode, ReturnNode, VarDeclarationNode
+from utils06.utils import MinusNode, StarNode, DivNode, VariableNode, BoolNode
+
 
 class Language06:
     def __init__(self) -> None:
@@ -28,25 +33,25 @@ class Language06:
         idx, num, boolx, typex = G.Terminals('ID NUMBER BOOL TYPE')
 
 
-        program %= stat_list
+        program %= stat_list, lambda h,s: ProgramNode(s[1])
 
-        stat_list %= stat + semi
-        stat_list %= stat + semi + stat_list
+        stat_list %= stat + semi, lambda h,s: s[1]
+        stat_list %= stat + semi + stat_list, lambda h,s: [s[1]] + s[3]
 
-        stat %= let_var
-        stat %= let_const
-        stat %= if_stat
-        stat %= while_stat
-        stat %= asign_stat
-        stat %= def_func
-        stat %= return_stat       
+        stat %= let_var, lambda h,s: s[1]
+        stat %= let_const, lambda h,s: s[1]
+        stat %= if_stat, lambda h,s: s[1]
+        stat %= while_stat, lambda h,s: s[1]
+        stat %= asign_stat, lambda h,s: s[1]
+        stat %= def_func, lambda h,s: s[1]
+        stat %= return_stat, lambda h,s: s[1]
 
-        let_var %= var + typex + idx + asign + arg
-        let_var %= var + typex + idx
+        let_var %= var + typex + idx + asign + arg, lambda h,s: VarDeclarationNode(idx= s[3], ttype=s[2], expr=s[5])
+        let_var %= var + typex + idx, lambda h,s: VarDeclarationNode(idx= s[3], ttype=s[2], expr=None)
 
-        let_const %= const + typex + idx + asign + arg
+        let_const %= const + typex + idx + asign + arg, lambda h,s: ConstDeclarationNode(idx= s[3], ttype=s[2], expr=s[5])
 
-        asign_stat %= idx + asign + arg
+        asign_stat %= idx + asign + arg, lambda h,s: AsignVarNode(idx= s[1], expr=s[3])
 
         def_func %= func + idx + opar + param_list + cpar + arrow + typex + okey + stat_list + ckey
         def_func %= func + idx + opar + param_list + cpar + okey + stat_list + ckey
@@ -76,30 +81,29 @@ class Language06:
         comp %= expr + gt + expr
         comp %= expr        
 
-        expr %= expr + plus + term
-        expr %= expr + minus + term
-        expr %= term
+        expr %= expr + plus + term, lambda h,s: PlusNode(left= s[1], right=s[3])
+        expr %= expr + minus + term, lambda h,s: MinusNode(left= s[1], right=s[3])
+        expr %= term, lambda h,s: s[1]
 
-        term %= term + star + factor
-        term %= term + div + factor
-        term %= factor
+        term %= term + star + factor, lambda h,s: StarNode(left= s[1], right=s[3])
+        term %= term + div + factor, lambda h,s: DivNode(left= s[1], right=s[3])
+        term %= factor, lambda h,s: s[1]
 
-        factor %= atom
+        factor %= atom, lambda h,s: s[1]
+        factor %= opar + comp_list + cpar, lambda h,s: s[2]
+
+        atom %= num, lambda h,s: ConstantNumNode(s[1])
+        atom %= idx, lambda h,s: VariableNode(s[1])
+        atom %= boolx, lambda h,s: BoolNode(s[1])
+        atom %= func_call, lambda h,s: s[1]
+
+        func_call %= idx + opar + arg_list + cpar, lambda h,s: CallNode(idx= s[1], args= s[3])
+        func_call %= idx + opar + cpar, lambda h,s: CallNode(idx= s[1], args=[])
+
+        arg_list %= arg + comma + arg_list, lambda h,s: [ s[1] ] + s[3]
+        arg_list %= arg, lambda h,s: [ s[1] ]
         
-        factor %= opar + comp_list + cpar
-
-        atom %= num
-        atom %= idx
-        atom %= boolx
-        atom %= func_call
-
-        func_call %= idx + opar + arg_list + cpar
-        func_call %= idx + opar + cpar
-
-        arg_list %= arg + comma + arg_list
-        arg_list %= arg
-        
-        arg %= comp_list
+        arg %= comp_list, lambda h,s: s[1]
 
         nonzero_digits = '|'.join(str(n) for n in range(1,10))
         letters_lower = '|'.join(chr(n) for n in range(ord('a'),ord('z')+1))

@@ -83,6 +83,9 @@ class ConstantNumNode(AtomicNode):
 class VariableNode(AtomicNode):
     pass
 
+class BoolNode(AtomicNode):
+    pass
+
 class CallNode(AtomicNode):
     def __init__(self, idx, args):
         AtomicNode.__init__(self, idx)
