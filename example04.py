@@ -49,7 +49,7 @@ class PowNode(BinaryNode):
 class Language04:
     def __init__(self) -> None:
         ########################################################
-        #                 GRAMATICA 03  LR(1)                  #        
+        #                 GRAMATICA 04  LR(1)                  #        
         ########################################################
         G = Grammar()
         S = G.NonTerminal('S', True)
