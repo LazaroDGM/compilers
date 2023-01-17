@@ -59,6 +59,10 @@ class Language06:
             lambda h,s: FuncDeclarationNode(idx= s[2], params= s[4].ids, types= s[4].ttypes, return_type= s[7], body=s[9])
         def_func %= func + idx + opar + param_list + cpar + okey + stat_list + ckey, \
             lambda h,s: FuncDeclarationNode(idx= s[2], params= s[4].ids, types= s[4].ttypes, return_type= None, body=s[7])
+        def_func %= func + idx + opar + cpar + arrow + typex + okey + stat_list + ckey, \
+            lambda h,s: FuncDeclarationNode(idx= s[2], params= [], types= [], return_type= s[6], body=s[8])
+        def_func %= func + idx + opar + cpar + okey + stat_list + ckey, \
+            lambda h,s: FuncDeclarationNode(idx= s[2], params= [], types= [], return_type= None, body=s[6])
 
         return_stat %= returnx + arg, lambda h,s: ReturnNode(s[2])
 
