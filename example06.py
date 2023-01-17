@@ -6,7 +6,7 @@ from utils06.utils import ConstDeclarationNode, DivNode, ExpressionNode, FuncDec
 from utils06.utils import IfElseEndNode, IfEndNode, PlusNode, ProgramNode, ReturnNode, VarDeclarationNode
 from utils06.utils import MinusNode, StarNode, DivNode, VariableNode, BoolNode
 from utils06.utils import EqualNode, NotEqualNode, LessThanEqualNode, LessThanNode, GreaterEqualNode, GreaterNode
-from utils06.utils import AndNode, OrNode, WhileNode
+from utils06.utils import AndNode, OrNode, WhileNode, ParamNode, ParamListNode
 
 
 class Language06:
@@ -55,8 +55,10 @@ class Language06:
 
         asign_stat %= idx + asign + arg, lambda h,s: AsignVarNode(idx= s[1], expr=s[3])
 
-        def_func %= func + idx + opar + param_list + cpar + arrow + typex + okey + stat_list + ckey
-        def_func %= func + idx + opar + param_list + cpar + okey + stat_list + ckey
+        def_func %= func + idx + opar + param_list + cpar + arrow + typex + okey + stat_list + ckey, \
+            lambda h,s: FuncDeclarationNode(idx= s[2], params= s[4].ids, types= s[4].ttypes, return_type= s[7], body=s[9])
+        def_func %= func + idx + opar + param_list + cpar + okey + stat_list + ckey, \
+            lambda h,s: FuncDeclarationNode(idx= s[2], params= s[4].ids, types= s[4].ttypes, return_type= None, body=s[7])
 
         return_stat %= returnx + arg, lambda h,s: ReturnNode(s[2])
 
@@ -65,10 +67,10 @@ class Language06:
 
         while_stat %= whilex + opar + comp_list + cpar + colon + stat_list + endwhile, lambda h,s: WhileNode(s[3], s[6])
 
-        param_list %= param
-        param_list %= param + comma + param_list
+        param_list %= param, lambda h,s: ParamListNode(idxs= [ s[1].id ], ttypes= [ s[1].ttype ])
+        param_list %= param + comma + param_list, lambda h,s: ParamListNode(idxs= [ s[1].id ] + s[3].ids, ttypes= [ s[1].ttype ] + s[3].ttypes)
 
-        param %= typex + idx
+        param %= typex + idx, lambda h,s: ParamNode(idx= s[2], ttype= s[1])
 
         comp_list %= comp_list + andx + comp, lambda h,s: AndNode(s[1], s[3])
         comp_list %= comp_list + orx + comp, lambda h,s: OrNode(s[1], s[3])

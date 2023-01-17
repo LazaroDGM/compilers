@@ -63,6 +63,18 @@ class ReturnNode(StatementNode):
 
 ##############################################
 
+class ParamListNode(Node):
+    def __init__(self, idxs, ttypes):
+        self.ids = idxs
+        self.ttypes= ttypes
+
+class ParamNode(Node):
+    def __init__(self, idx, ttype):
+        self.id = idx
+        self.ttype= ttype
+
+##############################################
+
 class ExpressionNode(Node):
     pass
 
