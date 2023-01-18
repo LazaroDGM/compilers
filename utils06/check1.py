@@ -78,10 +78,10 @@ class Scope:
             child = self.parent
         return False
     
-    def is_func_defined(self, fname, n):        
+    def is_func_defined(self, fname):        
         child = self
         while child is not None:            
-            finfo = self.get_local_function_info(fname, n)
+            finfo = self.get_local_function_info(fname)
             if finfo is not None:
                 return True
             child = self.parent
@@ -137,7 +137,7 @@ class SemanticCheckerVisitor(object):
             self.errors.append(f"El tipo '{node.ttype}' de la variable '{node.id}' no esta definido.")
         if scope.is_local_const(node.id):
             self.errors.append(f"Existe una constante '{node.id}' ya definida previamente.")
-        if not scope.define_variable(vname= node.id,ttype=node.ttype):
+        elif not scope.define_variable(vname= node.id,ttype=node.ttype):
             self.errors.append(f"La variable '{node.id}' ya ha sido definida previamente.")
         self.visit(node.expr, scope)
 
@@ -145,9 +145,9 @@ class SemanticCheckerVisitor(object):
     def visit(self, node: ConstDeclarationNode, scope: Scope):
         if node.ttype not in defined_types:
             self.errors.append(f"El tipo '{node.ttype}' de la constante '{node.id}' no esta definido.")
-        if scope.is_local_var(node.id):
-            self.errors.append(f"Existe una variable '{node.id}' ya definida previamente.")
-        if not scope.define_const(vname= node.id,ttype=node.ttype):
+        elif scope.is_local_var(node.id):
+            self.errosrs.append(f"Existe una variable '{node.id}' ya definida previamente.")
+        if not scope.define_const(cname= node.id,ttype=node.ttype):
             self.errors.append(f"La constante '{node.id}' ya ha sido definida previamente.")
         self.visit(node.expr, scope)
         
@@ -157,12 +157,19 @@ class SemanticCheckerVisitor(object):
         if not scope.define_function(node.id, params= node.params, types= node.types):
             self.errors.append(f"La funcion '{node.id}' ya esta definida.")        
         child = scope.create_child_scope()
-        for nparam, tparam in zip(node.params, node.types):
+        self.visit(node.params, child)
+        for st in node.body:                        
+            self.visit(st, child)
+
+###########################################################
+
+    @visitor.when(ParamListNode)
+    def visit(self, node: ParamListNode, scope: Scope):
+        for nparam, tparam in zip(node.ids, node.ttypes):
             if tparam not in defined_types:
                 self.errors.append(f"El tipo '{tparam}' del parametro '{nparam}' no esta definido.")
-            if not child.define_variable(nparam, tparam):
+            if not scope.define_variable(nparam, tparam):
                 self.errors.append(f"El parametro '{nparam}' ya esta definido")
-        self.visit(node.body, child)
 
 ###########################################################  
     
@@ -174,14 +181,22 @@ class SemanticCheckerVisitor(object):
         except:
             self.errors.append('No se puede convertir a float')
     
-    @visitor.when(VariableNode)
-    def visit(self, node: VariableNode, scope: Scope):        
-        if not scope.is_var_defined(node.lex):
-            self.errors.append(f'La variable {node.lex} no ha sido definida.')          
+    @visitor.when(BoolNode)
+    def visit(self, node: BoolNode, scope: Scope):        
+        try:
+            value = bool(node.lex)
+            node.lex = value
+        except:
+            self.errors.append('No se puede convertir a bool')
+    
+    @visitor.when(VarConstNode)
+    def visit(self, node: VarConstNode, scope: Scope):        
+        if not scope.is_var_defined(node.lex) and not scope.is_const_defined(node.lex):
+            self.errors.append(f"No existe ninguna variable o constante '{node.lex}' definida.")
     
     @visitor.when(CallNode)
     def visit(self, node: CallNode, scope: Scope):        
-        if not scope.is_func_defined(node.lex, len(node.args)):
+        if not scope.is_func_defined(node.lex):
             self.errors.append(f'La funcion {node.lex} no ha sido definida')        
         for arg in node.args:
             arg: ExpressionNode

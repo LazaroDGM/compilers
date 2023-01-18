@@ -4,10 +4,11 @@ from tools.pycompiler import Grammar, Terminal, NonTerminal, Token
 from utils06.utils import AsignVarNode, AtomicNode, BinaryNode, CallNode, ConstantNumNode
 from utils06.utils import ConstDeclarationNode, DivNode, ExpressionNode, FuncDeclarationNode
 from utils06.utils import IfElseEndNode, IfEndNode, PlusNode, ProgramNode, ReturnNode, VarDeclarationNode
-from utils06.utils import MinusNode, StarNode, DivNode, VariableNode, BoolNode
+from utils06.utils import MinusNode, StarNode, DivNode, VarConstNode, BoolNode
 from utils06.utils import EqualNode, NotEqualNode, LessThanEqualNode, LessThanNode, GreaterEqualNode, GreaterNode
 from utils06.utils import AndNode, OrNode, WhileNode, ParamNode, ParamListNode
 from utils06.format_printer import FormatVisitor
+from utils06.check1 import SemanticCheckerVisitor
 
 
 class Language06:
@@ -102,7 +103,7 @@ class Language06:
         factor %= opar + comp_list + cpar, lambda h,s: s[2]
 
         atom %= num, lambda h,s: ConstantNumNode(s[1])
-        atom %= idx, lambda h,s: VariableNode(s[1])
+        atom %= idx, lambda h,s: VarConstNode(s[1])
         atom %= boolx, lambda h,s: BoolNode(s[1])
         atom %= func_call, lambda h,s: s[1]
 
@@ -215,8 +216,10 @@ L = Language06()
 text = \
 '''
 var int x=5;
-func F(int x, int y) -> int {
+func F(int y) -> int {
     const int mul = 5;
+    var int x = 8;
+    var int y = 7;
     return mul * (x+y);
 };
 var int result = F(6, x);
@@ -224,3 +227,7 @@ var int result = F(6, x);
 
 ast = L.Build_AST(text, True)
 
+semantic_checker = SemanticCheckerVisitor()
+errors = semantic_checker.visit(ast)
+for i, error in enumerate(errors, 1):
+    print(f'{i}.', error)

@@ -121,7 +121,7 @@ class GreaterNode(BinaryNode):
 class ConstantNumNode(AtomicNode):
     pass
 
-class VariableNode(AtomicNode):
+class VarConstNode(AtomicNode):
     pass
 
 class BoolNode(AtomicNode):
