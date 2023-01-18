@@ -30,9 +30,8 @@ class ConstDeclarationNode(StatementNode):
         self.expr = expr
 
 class FuncDeclarationNode(StatementNode):
-    def __init__(self, idx, types, params, return_type, body):
+    def __init__(self, idx, params, return_type, body):
         self.id = idx
-        self.types= types
         self.params = params
         self.body = body
         self.return_type = return_type
@@ -65,9 +64,11 @@ class ReturnNode(StatementNode):
 ##############################################
 
 class ParamListNode(Node):
-    def __init__(self, idxs, ttypes):
-        self.ids = idxs
-        self.ttypes= ttypes
+    def __init__(self, params):
+        self.params = params
+
+    def __iter__(self):
+        return iter(self.params)
 
 class ParamNode(Node):
     def __init__(self, idx, ttype):

@@ -1,4 +1,4 @@
-from tools.shift_reduce import LR1Parser, evaluate_reverse_parse, SLR1Parser, table_to_dataframe
+from tools.shift_reduce import evaluate_reverse_parse, SLR1Parser, table_to_dataframe
 from tools.lexer import Lexer
 from tools.pycompiler import Grammar, Terminal, NonTerminal, Token
 from utils06.utils import AsignVarNode, AtomicNode, BinaryNode, CallNode, ConstantNumNode
@@ -58,13 +58,13 @@ class Language06:
         asign_stat %= idx + asign + arg, lambda h,s: AsignVarNode(idx= s[1], expr=s[3])
 
         def_func %= func + idx + opar + param_list + cpar + arrow + typex + okey + stat_list + ckey, \
-            lambda h,s: FuncDeclarationNode(idx= s[2], params= s[4].ids, types= s[4].ttypes, return_type= s[7], body=s[9])
+            lambda h,s: FuncDeclarationNode(idx= s[2], params= s[4], return_type= s[7], body=s[9])
         def_func %= func + idx + opar + param_list + cpar + okey + stat_list + ckey, \
-            lambda h,s: FuncDeclarationNode(idx= s[2], params= s[4].ids, types= s[4].ttypes, return_type= None, body=s[7])
+            lambda h,s: FuncDeclarationNode(idx= s[2], params= s[4], return_type= None, body=s[7])
         def_func %= func + idx + opar + cpar + arrow + typex + okey + stat_list + ckey, \
-            lambda h,s: FuncDeclarationNode(idx= s[2], params= [], types= [], return_type= s[6], body=s[8])
+            lambda h,s: FuncDeclarationNode(idx= s[2], params= ParamListNode([]), return_type= s[6], body=s[8])
         def_func %= func + idx + opar + cpar + okey + stat_list + ckey, \
-            lambda h,s: FuncDeclarationNode(idx= s[2], params= [], types= [], return_type= None, body=s[6])
+            lambda h,s: FuncDeclarationNode(idx= s[2], params= ParamListNode([]), return_type= None, body=s[6])
 
         return_stat %= returnx + arg, lambda h,s: ReturnNode(s[2])
 
@@ -73,8 +73,8 @@ class Language06:
 
         while_stat %= whilex + opar + comp_list + cpar + colon + stat_list + endwhile, lambda h,s: WhileNode(s[3], s[6])
 
-        param_list %= param, lambda h,s: ParamListNode(idxs= [ s[1].id ], ttypes= [ s[1].ttype ])
-        param_list %= param + comma + param_list, lambda h,s: ParamListNode(idxs= [ s[1].id ] + s[3].ids, ttypes= [ s[1].ttype ] + s[3].ttypes)
+        param_list %= param, lambda h,s: ParamListNode( [ s[1] ] )
+        param_list %= param + comma + param_list, lambda h,s: ParamListNode(params= [ s[1].id ] + s[3].params)
 
         param %= typex + idx, lambda h,s: ParamNode(idx= s[2], ttype= s[1])
 
@@ -216,13 +216,19 @@ L = Language06()
 text = \
 '''
 var int x=5;
-func F(int y) -> int {
+func F(int y) -> int {    
+    hola = 8;
+
+    func G(bool h) -> int {
+        var i = 90;        
+    };
     const int mul = 5;
     var int x = 8;
-    var int y = 7;
+    var int z = 7;
     return mul * (x+y);
 };
-var int result = F(6, x);
+x = 6;
+var int z = F(6, x);
 '''
 
 ast = L.Build_AST(text, True)

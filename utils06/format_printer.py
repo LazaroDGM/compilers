@@ -13,6 +13,12 @@ class FormatVisitor(object):
         ans = '\t' * tabs + f'\\__ProgramNode [<stat>; ... <stat>;]'
         statements = '\n'.join(self.visit(child, tabs + 1) for child in node.statements)
         return f'{ans}\n{statements}'
+
+    @visitor.when(AsignVarNode)
+    def visit(self, node, tabs=0):
+        ans = '\t' * tabs + f'\\__AsignVarNode: {node.id} = <expr>'
+        expr = self.visit(node.expr, tabs+1)
+        return f'{ans}\n{expr}'
     
     @visitor.when(VarDeclarationNode)
     def visit(self, node: VarDeclarationNode, tabs=0):
@@ -34,7 +40,7 @@ class FormatVisitor(object):
     
     @visitor.when(FuncDeclarationNode)
     def visit(self, node: FuncDeclarationNode, tabs=0):
-        params = ', '.join([str(ttype) + ' '+ str(idx) for ttype, idx in zip(node.types, node.params)])
+        params = ', '.join([str(param.ttype) + ' '+ str(param.id) for param in node.params])
         ans = '\t' * tabs + f'\\__FuncDeclarationNode: def {node.id}({params}) -> {node.return_type} <expr>'
         body = '\n'.join(self.visit(child, tabs + 1) for child in node.body)
         return f'{ans}\n{body}'

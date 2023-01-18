@@ -19,10 +19,9 @@ class ConstInfo:
         self.type = ttype
 
 class FunctionInfo:
-    def __init__(self, name, params, types):
+    def __init__(self, name, params: ParamListNode):
         self.name = name
         self.params = params
-        self.types = types
 
 class Scope:
     def __init__(self, parent=None):
@@ -53,9 +52,9 @@ class Scope:
             return True
         return False
     
-    def define_function(self, fname, params, types):        
+    def define_function(self, fname, params):        
         if not self.is_local_func(fname):
-            finfo = FunctionInfo(fname, params, types)
+            finfo = FunctionInfo(fname, params)
             self.local_funcs.append(finfo)
             return True
         return False
@@ -141,6 +140,14 @@ class SemanticCheckerVisitor(object):
             self.errors.append(f"La variable '{node.id}' ya ha sido definida previamente.")
         self.visit(node.expr, scope)
 
+    @visitor.when(AsignVarNode)
+    def visit(self, node: AsignVarNode, scope: Scope):        
+        if scope.is_local_const(node.id):
+            self.errors.append(f"Existe una constante '{node.id}' ya definida previamente.")
+        elif not scope.is_local_var(vname= node.id):
+            self.errors.append(f"No existe ninguna variable '{node.id}'.")
+        self.visit(node.expr, scope)
+
     @visitor.when(ConstDeclarationNode)
     def visit(self, node: ConstDeclarationNode, scope: Scope):
         if node.ttype not in defined_types:
@@ -154,7 +161,7 @@ class SemanticCheckerVisitor(object):
     
     @visitor.when(FuncDeclarationNode)
     def visit(self, node: FuncDeclarationNode, scope: Scope):  
-        if not scope.define_function(node.id, params= node.params, types= node.types):
+        if not scope.define_function(node.id, params= node.params):
             self.errors.append(f"La funcion '{node.id}' ya esta definida.")        
         child = scope.create_child_scope()
         self.visit(node.params, child)
@@ -165,11 +172,16 @@ class SemanticCheckerVisitor(object):
 
     @visitor.when(ParamListNode)
     def visit(self, node: ParamListNode, scope: Scope):
-        for nparam, tparam in zip(node.ids, node.ttypes):
-            if tparam not in defined_types:
-                self.errors.append(f"El tipo '{tparam}' del parametro '{nparam}' no esta definido.")
-            if not scope.define_variable(nparam, tparam):
-                self.errors.append(f"El parametro '{nparam}' ya esta definido")
+        for param in node.params:
+            self.visit(param, scope)
+    
+    @visitor.when(ParamNode)
+    def visit(self, node: ParamNode, scope: Scope):
+        nparam, tparam = node.id, node.ttype
+        if tparam not in defined_types:
+            self.errors.append(f"El tipo '{tparam}' del parametro '{nparam}' no esta definido.")
+        if not scope.define_variable(nparam, tparam):
+            self.errors.append(f"El parametro '{nparam}' ya esta definido")
 
 ###########################################################  
     
