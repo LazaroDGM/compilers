@@ -18,7 +18,7 @@ class Language07:
         ############ .INST #############
         inst_sec, inst_list, inst = G.NonTerminals('<inst-sec> <inst-list> <inst>')
         mov_i, copy_i, paste_i = G.NonTerminals('<mov> <copy> <paste>')
-        add_i, sub_i, mul_i, div_i, mod_i = G.NonTerminals('<add> <sub> <mul> <div> <mod>')
+        add_i, sub_i, mul_i, div_i, mod_i, inc_i, dec_i = G.NonTerminals('<add> <sub> <mul> <div> <mod> <inc> <dec>')
         goto_i, label_i = G.NonTerminals('<goto> <label>')
         push_i, pop_i, push_mem, pop_mem, overlap_i, pull_i = G.NonTerminals('<push> <pop> <push-mem> <pop-mem> <overlap> <pull>')
 
@@ -29,7 +29,7 @@ class Language07:
         sec_map_name, sec_inst_name = G.Terminals('.MAPS .INST')
 
         mov, copy, paste, mapx = G.Terminals('mov copy paste map')
-        add, sub, mul, div, mod = G.Terminals('add sub mul div mod')
+        add, sub, mul, div, mod, inc, dec = G.Terminals('add sub mul div mod inc dec')
         goto, label, ifzero, ifpositive, ifnegative = G.Terminals('goto label ifzero ifpositive ifnegative')
         push, pop, mem, overlap, pull = G.Terminals('push pop mem overlap pull')
 
@@ -49,7 +49,7 @@ class Language07:
         rows_map %= obrac + row_map + cbrac + comma + rows_map
         rows_map %= obrac + row_map + cbrac
 
-        row_map %= square + comma + square_list
+        row_map %= square + comma + row_map
         row_map %= square
 
         square %= squarex
@@ -64,11 +64,15 @@ class Language07:
         inst %= mov_i
         inst %= copy_i
         inst %= paste_i
+
         inst %= add_i
         inst %= sub_i
         inst %= mul_i
         inst %= div_i
         inst %= mod_i
+        inst %= inc_i
+        inst %= dec_i
+
         inst %= goto_i
         inst %= label_i
         inst %= overlap_i
@@ -79,12 +83,16 @@ class Language07:
         mov_i %= mov + dirx + semi
         copy_i %= copy + semi
         paste_i %= paste + semi
+
         add_i %= add + semi
         sub_i %= sub + semi
         mul_i %= mul + semi
         div_i %= div + semi
         mod_i %= mod + semi        
-        label_i %= label + idx + semi
+        dec_i %= dec + semi
+        inc_i %= inc + semi
+
+        label_i %= label + idx + colon
         overlap_i %= overlap + idx + semi
         pull_i %= pull + semi
         push_i %= push + semi
@@ -111,7 +119,7 @@ class Language07:
             [
                 ('space', '( |\t|\n)( |\t|\n)*'),  
 
-                (squarex, 'B|H|V'),
+                (squarex, 'H|V|(({nonzero_digits})(0|{nonzero_digits})*)|0'),
                 (dirx, 'N|S|E|W'),
 
                 (sec_map_name, '\.MAPS'),
@@ -125,11 +133,17 @@ class Language07:
                 (ckey, '}'),
                 (colon,':'),
 
+                (mov, 'mov'),
+                (copy, 'copy'),
+                (paste, 'paste'),
+
                 (add, 'add'),
                 (sub, 'sub'),
                 (mul, 'mul'),
                 (div, 'div'),
                 (mod, 'mod'),
+                (dec, 'dec'),
+                (inc, 'inc'),
 
                 (pop, 'pop'),
                 (push, 'push'),
@@ -140,6 +154,7 @@ class Language07:
                 (ifzero, 'ifzero'),
                 (ifpositive, 'ifpositive'),
                 (ifnegative, 'ifnegative'),
+                (label, 'label'),
 
                 (mapx, 'map'),
                 
@@ -153,5 +168,74 @@ class Language07:
         ########################################################
         # ==================================================== #
         ########################################################
+    
+    ####################################
+    #              VALID               #
+    ####################################
+    def is_Valid(self, text, verbose=False):
+        all_tokens = self.lexer(text)
+        tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
+        right_parse, operations = self.parser(tokens)  
+        return True
 
 L = Language07()
+
+text = '''
+.MAPS{
+    map M1:
+    [
+        [V,V,V,V],
+        [V,V,V,V],
+        [V,V,V,V]
+    ]
+
+    map M2:
+    [
+        [0,V,V,V],
+        [5,2,V,V],
+        [V,V,V,V]
+    ]
+}
+
+.INST{
+    overlap M1;
+    
+    mov S;
+    mov S;
+    mov E;
+    mov E;
+    mov E;
+    mov E;
+    mov N;
+    mov W;
+    mov W;
+    mov N;
+    mov E;
+
+    mov S;
+
+label WHILE:
+    copy;
+    dec;
+    goto ENDWHILE ifzero;
+
+    mov E;
+    copy;
+    add;
+    paste;
+
+    mov W;
+    goto WHILE;
+
+    copy;
+    add;
+    copy;
+
+label ENDWHILE:
+    mov E;
+    copy;
+
+}
+'''
+
+L.is_Valid(text)
