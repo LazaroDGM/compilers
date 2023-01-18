@@ -35,6 +35,7 @@ class FuncDeclarationNode(StatementNode):
         self.types= types
         self.params = params
         self.body = body
+        self.return_type = return_type
 
 class AsignVarNode(StatementNode):
     def __init__(self, idx, expr) -> None:

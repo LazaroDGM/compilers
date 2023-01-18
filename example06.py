@@ -7,6 +7,7 @@ from utils06.utils import IfElseEndNode, IfEndNode, PlusNode, ProgramNode, Retur
 from utils06.utils import MinusNode, StarNode, DivNode, VariableNode, BoolNode
 from utils06.utils import EqualNode, NotEqualNode, LessThanEqualNode, LessThanNode, GreaterEqualNode, GreaterNode
 from utils06.utils import AndNode, OrNode, WhileNode, ParamNode, ParamListNode
+from utils06.format_printer import FormatVisitor
 
 
 class Language06:
@@ -37,7 +38,7 @@ class Language06:
 
         program %= stat_list, lambda h,s: ProgramNode(s[1])
 
-        stat_list %= stat + semi, lambda h,s: s[1]
+        stat_list %= stat + semi, lambda h,s: [ s[1] ]
         stat_list %= stat + semi + stat_list, lambda h,s: [s[1]] + s[3]
 
         stat %= let_var, lambda h,s: s[1]
@@ -179,6 +180,23 @@ class Language06:
         ########################################################
         parser = SLR1Parser(G)
         self.parser = parser
+        ########################################################
+        #                       PRINTER                        #
+        ########################################################
+        self.formatter = FormatVisitor()
+
+    ####################################
+    #                AST               #
+    ####################################
+    def Build_AST(self, text, verbose=False):
+        all_tokens = self.lexer(text)
+        tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
+        right_parse, operations = self.parser(tokens)        
+        ast = evaluate_reverse_parse(right_parse, operations, tokens)
+
+        if verbose:
+            self.Print(ast)
+        return ast
 
     ####################################
     #              VALID               #
@@ -189,4 +207,20 @@ class Language06:
         right_parse, operations = self.parser(tokens)  
         return True 
 
+    def Print(self, ast):
+        print(self.formatter.visit(ast))
+
 L = Language06()
+
+text = \
+'''
+var int x=5;
+func F(int x, int y) -> int {
+    const int mul = 5;
+    return mul * (x+y);
+};
+var int result = F(6, x);
+'''
+
+ast = L.Build_AST(text, True)
+
