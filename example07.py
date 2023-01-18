@@ -3,6 +3,7 @@ from tools.lexer import Lexer
 from tools.pycompiler import Grammar, Terminal, NonTerminal, Token
 from utils07.utils import *
 from utils07.type_collector import TypeCollector
+from utils07.semantic_check import SemanticCheck
 
 class Language07:
     def __init__(self) -> None:
@@ -19,7 +20,7 @@ class Language07:
         body_map, rows_map, row_map, square_list, square =G.NonTerminals('<body-map> <rows-map> <row-map> <square-list> <square>')
         ############ .INST #############
         inst_sec, inst_list, inst = G.NonTerminals('<inst-sec> <inst-list> <inst>')
-        mov_i, copy_i, paste_i = G.NonTerminals('<mov> <copy> <paste>')
+        mov_i, copy_i, paste_i, nop_i = G.NonTerminals('<mov> <copy> <paste> <nop>')
         add_i, sub_i, mul_i, div_i, mod_i, inc_i, dec_i = G.NonTerminals('<add> <sub> <mul> <div> <mod> <inc> <dec>')
         goto_i, label_i = G.NonTerminals('<goto> <label>')
         push_i, pop_i, push_mem, pop_mem, overlap_i, pull_i = G.NonTerminals('<push> <pop> <push-mem> <pop-mem> <overlap> <pull>')
@@ -30,7 +31,7 @@ class Language07:
         
         sec_map_name, sec_inst_name = G.Terminals('.MAPS .INST')
 
-        mov, copy, paste, mapx = G.Terminals('mov copy paste map')
+        mov, copy, paste, mapx, nop = G.Terminals('mov copy paste map nop')
         add, sub, mul, div, mod, inc, dec = G.Terminals('add sub mul div mod inc dec')
         goto, label, ifzero, ifpositive, ifnegative = G.Terminals('goto label ifzero ifpositive ifnegative')
         push, pop, mem, overlap, pull = G.Terminals('push pop mem overlap pull')
@@ -66,6 +67,7 @@ class Language07:
         inst %= mov_i, lambda h,s: s[1]
         inst %= copy_i, lambda h,s: s[1]
         inst %= paste_i, lambda h,s: s[1]
+        inst %= nop_i, lambda h,s: s[1]
 
         inst %= add_i, lambda h,s: s[1]
         inst %= sub_i, lambda h,s: s[1]
@@ -85,6 +87,7 @@ class Language07:
         mov_i %= mov + dirx + semi, lambda h,s: MovNode(s[2])
         copy_i %= copy + semi, lambda h,s: CopyNode()
         paste_i %= paste + semi, lambda h,s: PasteNode()
+        nop_i %= nop + semi, lambda h,s: NopNode()
 
         add_i %= add + semi, lambda h,s: AddNode()
         sub_i %= sub + semi, lambda h,s: SubNode()
@@ -138,6 +141,7 @@ class Language07:
                 (mov, 'mov'),
                 (copy, 'copy'),
                 (paste, 'paste'),
+                (nop, 'nop'),
 
                 (add, 'add'),
                 (sub, 'sub'),
@@ -210,6 +214,11 @@ text = '''
         [5,2,V,V],
         [V,V,V,V]
     ]
+
+    map M2:
+    [
+        [V,V]
+    ]
 }
 
 .INST{
@@ -228,7 +237,7 @@ text = '''
     mov E;
 
     mov S;
-
+label JUMP:
 label WHILE:
     copy;
     dec;
@@ -243,9 +252,11 @@ label WHILE:
     goto WHILE;
 
     copy;
-    add;
+    goto SUDAFRICA;
+    overlap M3;
     copy;
 
+label ENDWHILE:
 label ENDWHILE:
     mov E;
     copy;
@@ -256,9 +267,19 @@ label ENDWHILE:
 L.is_Valid(text)
 ast = L.Build_AST(text)
 
+print('<----------Recolector----------->')
 type_collector = TypeCollector()
 errors, context = type_collector.visit(ast)
 for i, error in enumerate(errors, 1):
     print(f'{i}.', error)
 
-print(context)
+semantic_check = SemanticCheck()
+errors, warnings, context =semantic_check.visit(ast, context)
+print('<----------Semantica----------->')
+print('Errores:')
+for i, error in enumerate(errors, 1):
+    print(f'{i}.', error)
+print('Advertencias:')
+for i, warn in enumerate(warnings, 1):
+    print(f'{i}.', warn)
+

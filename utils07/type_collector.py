@@ -16,6 +16,7 @@ class LabelInfo:
 class Context:
     def __init__(self):
         self.maps = {}
+        self.maps_invocation = {}
 
         self.labels = {}
         self.labels_invocation = {}
@@ -28,6 +29,7 @@ class Context:
         if self.get_map_info(name) is None:
             map_info = MapInfo(name)
             self.maps[name] = map_info
+            self.maps_invocation[name] = False
             return True
         return False
 
@@ -36,6 +38,13 @@ class Context:
 
     def get_map_info(self, name):
         return self.maps.get(name, None)
+
+    def unused_maps(self):
+        return list(
+            filter(
+                lambda name: not self.maps_invocation[name], self.maps.keys()
+                )
+            )
 
 
     ###################### INST ########################
@@ -56,6 +65,12 @@ class Context:
     def get_label_info(self, name):
         return self.labels.get(name, None)
 
+    def unused_labels(self):
+        return list(
+            filter(
+                lambda name: not self.labels_invocation[name], self.labels.keys()
+                )
+            )
     
 
 

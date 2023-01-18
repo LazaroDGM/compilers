@@ -20,6 +20,7 @@ class SecMapsNode(Node):
 class SecInstructionNode(Node):
     def __init__(self, instructions) -> None:
         self.instructions = instructions
+        self.instructions.append(NopNode)
 
 ##################################
 #            .MAPS               #
@@ -51,16 +52,19 @@ class AtomicInstructionNode(InstructionNode):
 class MovNode(AtomicInstructionNode):
     pass
 
-class GotoNode(AtomicInstructionNode):
+class GotoGeneric(AtomicInstructionNode):
     pass
 
-class GotoIfZeroNode(AtomicInstructionNode):
+class GotoNode(GotoGeneric):
     pass
 
-class GotoIfPositive(AtomicInstructionNode):
+class GotoIfZeroNode(GotoGeneric):
     pass
 
-class GotoIfNegative(AtomicInstructionNode):
+class GotoIfPositive(GotoGeneric):
+    pass
+
+class GotoIfNegative(GotoGeneric):
     pass
 
 class LabelNode(AtomicInstructionNode):
@@ -105,8 +109,11 @@ class DecNode(InstructionNode):
 class IncNode(InstructionNode):
     pass
 
-class PushMem(InstructionNode):
+class PushMemNode(InstructionNode):
     pass
 
-class PopMem(InstructionNode):
+class PopMemNode(InstructionNode):
+    pass
+
+class NopNode(InstructionNode):
     pass
