@@ -20,7 +20,7 @@ class Language07:
         body_map, rows_map, row_map, square_list, square =G.NonTerminals('<body-map> <rows-map> <row-map> <square-list> <square>')
         ############ .INST #############
         inst_sec, inst_list, inst = G.NonTerminals('<inst-sec> <inst-list> <inst>')
-        mov_i, copy_i, paste_i, nop_i = G.NonTerminals('<mov> <copy> <paste> <nop>')
+        mov_i, copy_i, paste_i, nop_i, print_i = G.NonTerminals('<mov> <copy> <paste> <nop> <print>')
         add_i, sub_i, mul_i, div_i, mod_i, inc_i, dec_i = G.NonTerminals('<add> <sub> <mul> <div> <mod> <inc> <dec>')
         goto_i, label_i = G.NonTerminals('<goto> <label>')
         push_i, pop_i, push_mem, pop_mem, overlap_i, pull_i = G.NonTerminals('<push> <pop> <push-mem> <pop-mem> <overlap> <pull>')
@@ -31,7 +31,7 @@ class Language07:
         
         sec_map_name, sec_inst_name = G.Terminals('.MAPS .INST')
 
-        mov, copy, paste, mapx, nop = G.Terminals('mov copy paste map nop')
+        mov, copy, paste, mapx, nop, printx = G.Terminals('mov copy paste map nop print')
         add, sub, mul, div, mod, inc, dec = G.Terminals('add sub mul div mod inc dec')
         goto, label, ifzero, ifpositive, ifnegative = G.Terminals('goto label ifzero ifpositive ifnegative')
         push, pop, mem, overlap, pull = G.Terminals('push pop mem overlap pull')
@@ -68,6 +68,7 @@ class Language07:
         inst %= copy_i, lambda h,s: s[1]
         inst %= paste_i, lambda h,s: s[1]
         inst %= nop_i, lambda h,s: s[1]
+        inst %= print_i, lambda h,s: s[1]
 
         inst %= add_i, lambda h,s: s[1]
         inst %= sub_i, lambda h,s: s[1]
@@ -88,6 +89,7 @@ class Language07:
         copy_i %= copy + semi, lambda h,s: CopyNode()
         paste_i %= paste + semi, lambda h,s: PasteNode()
         nop_i %= nop + semi, lambda h,s: NopNode()
+        print_i %= printx + semi, lambda h,s: PrintNode()
 
         add_i %= add + semi, lambda h,s: AddNode()
         sub_i %= sub + semi, lambda h,s: SubNode()
@@ -142,6 +144,7 @@ class Language07:
                 (copy, 'copy'),
                 (paste, 'paste'),
                 (nop, 'nop'),
+                (printx, 'print'),
 
                 (add, 'add'),
                 (sub, 'sub'),
