@@ -14,7 +14,7 @@ class CELL(enum.Enum):
     P = 2 # pipe
     D = 3 # digit
 
-class map:
+class Map:
     def __init__(self, dimension) -> None:
         self.field_types = np.full(dimension, CELL.V)
         self.field_values = np.full(dimension, None)
@@ -199,14 +199,14 @@ class Robot:
 
 
     ### Recursividad ###
-    def overlap(self, mapp:map = None):
+    def overlap(self, mapp:Map = None):
         """ Toma el mapa actual y lo almacena en la pila en forma de tupla junto a la actual posicion. Luego asigna al robot los nuevos mapa y posicion como sus actuales """
         if self.map != None: self.maps_stack.append((self.map, self.position))
     
         if mapp == None:
             mapp = self.map
     
-        new_mapp = map(dimension=(mapp.getLength[0], mapp.getLength[1]))
+        new_mapp = Map(dimension=(mapp.getLength[0], mapp.getLength[1]))
         for i in range(new_mapp.getLength[0]):
             for j in range(new_mapp.getLength[0]):
                 new_mapp.field_types[i][j] = mapp.field_types[i][j]
