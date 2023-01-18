@@ -3,6 +3,11 @@ try:
 except:
     from utils07.utils import *
 
+
+class MapInfo:
+    def __init__(self, idx) -> None:
+        self.id = idx
+
 class LabelInfo:
     def __init__(self, idx, index) -> None:
         self.id = idx
@@ -10,10 +15,30 @@ class LabelInfo:
 
 class Context:
     def __init__(self):
+        self.maps = {}
+
         self.labels = {}
         self.labels_invocation = {}
         self.current_index = 0
 
+
+    ###################### MAPS ########################
+
+    def define_map(self, name):
+        if self.get_map_info(name) is None:
+            map_info = MapInfo(name)
+            self.maps[name] = map_info
+            return True
+        return False
+
+    def is_map_defined(self, name):
+        return name in self.maps.keys()
+
+    def get_map_info(self, name):
+        return self.maps.get(name, None)
+
+
+    ###################### INST ########################
     def inc_index(self):
         self.current_index += 1
 
@@ -36,7 +61,7 @@ class Context:
 
 class TypeCollector(object):
     '''
-    Recolector de Nombre de Mapas y Etiquetas de salto
+    Recolector de Nombres de Mapas y Etiquetas de salto
     '''
     def __init__(self):
         self.errors = []
@@ -48,13 +73,16 @@ class TypeCollector(object):
     @visitor.when(ProgramNode)
     def visit(self, node: ProgramNode, context=None):        
         context = Context()
-        #self.visit(self.sec_maps, context)
+        self.visit(node.sec_maps, context)
         self.visit(node.sec_inst, context)
-        return self.errors
+        return self.errors, context
+
+    ####################################################
 
     @visitor.when(SecMapsNode)
     def visit(self, node: SecMapsNode, context: Context):
-        pass
+        for mapx in node.maps:
+            self.visit(mapx, context)        
 
     @visitor.when(SecInstructionNode)
     def visit(self, node: SecInstructionNode, context: Context):
@@ -63,6 +91,26 @@ class TypeCollector(object):
                 self.visit(inst, context)
             else:
                 context.inc_index()
+
+    ###################################################
+
+    ###################### MAPS #######################
+
+    @visitor.when(MapDeclaration)
+    def visit(self, node: MapDeclaration, context: Context):
+        if not context.define_map(node.id):
+            self.errors.append(f"El mapa {node.id} ya esta definido")
+
+        assert len(node.map) > 0, 'Mapa sin Filas'
+        assert len(node.map[0]) > 0, 'Mapa con Fila sin Columnas'
+
+        count_cols = len(node.map[0])
+        for row in node.map:
+            if len(row) != count_cols:
+                self.errors.append(f"Mapa {node.id} con filas de distinto tamanno")
+                break
+
+    ###################### INST #######################
 
     @visitor.when(LabelNode)
     def visit(self, node: LabelNode, context: Context):
