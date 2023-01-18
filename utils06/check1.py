@@ -65,7 +65,7 @@ class Scope:
             vinfo = self.get_local_variable_info(vname)
             if vinfo is not None:
                 return True
-            child = self.parent
+            child = child.parent
         return False
 
     def is_const_defined(self, cname):        
@@ -74,7 +74,7 @@ class Scope:
             cinfo = self.get_local_const_info(cname)
             if cinfo is not None:
                 return True
-            child = self.parent
+            child = child.parent
         return False
     
     def is_func_defined(self, fname):        
@@ -83,7 +83,7 @@ class Scope:
             finfo = self.get_local_function_info(fname)
             if finfo is not None:
                 return True
-            child = self.parent
+            child = child.parent
         return False
 
 
@@ -168,6 +168,10 @@ class SemanticCheckerVisitor(object):
         for st in node.body:                        
             self.visit(st, child)
 
+    @visitor.when(ReturnNode)
+    def visit(self, node: ReturnNode, scope: Scope):
+        self.visit(node.expr, scope)
+
 ###########################################################
 
     @visitor.when(ParamListNode)
@@ -182,6 +186,33 @@ class SemanticCheckerVisitor(object):
             self.errors.append(f"El tipo '{tparam}' del parametro '{nparam}' no esta definido.")
         if not scope.define_variable(nparam, tparam):
             self.errors.append(f"El parametro '{nparam}' ya esta definido")
+
+###########################################################  
+
+    @visitor.when(IfEndNode)
+    def visit(self, node: IfEndNode, scope: Scope):
+        self.visit(node.cond, scope)
+        child = scope.create_child_scope()
+        for st in node.statements:
+            self.visit(st, child) 
+
+    @visitor.when(IfElseEndNode)
+    def visit(self, node: IfElseEndNode, scope: Scope):
+        self.visit(node.cond, scope)
+        child_if = scope.create_child_scope()
+        child_else = scope.create_child_scope()
+
+        for st in node.statements_if:
+            self.visit(st, child_if)
+        for st in node.statements_else:
+            self.visit(st, child_else)
+
+    @visitor.when(WhileNode)
+    def visit(self, node: WhileNode, scope: Scope):
+        self.visit(node.cond, scope)
+        child = scope.create_child_scope()
+        for st in node.statements:
+            self.visit(st, child)
 
 ###########################################################  
     
@@ -209,9 +240,8 @@ class SemanticCheckerVisitor(object):
     @visitor.when(CallNode)
     def visit(self, node: CallNode, scope: Scope):        
         if not scope.is_func_defined(node.lex):
-            self.errors.append(f'La funcion {node.lex} no ha sido definida')        
-        for arg in node.args:
-            arg: ExpressionNode
+            self.errors.append(f'La funcion {node.lex} no ha sido definida')
+        for arg in node.args:            
             self.visit(arg, scope)    
     
     @visitor.when(BinaryNode)

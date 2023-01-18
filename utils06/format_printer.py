@@ -61,3 +61,27 @@ class FormatVisitor(object):
         ans = '\t' * tabs + f'\\__CallNode: {node.lex}(<expr>, ..., <expr>)'
         args = '\n'.join(self.visit(arg, tabs + 1) for arg in node.args)
         return f'{ans}\n{args}'
+
+    ###################################
+
+    @visitor.when(IfEndNode)
+    def visit(self, node, tabs=0):
+        ans = '\t' * tabs + f'\\__IfEndNode if [<cond>] : [<stat>; ... <stat>;]'
+        cond = self.visit(node.cond, tabs + 1)
+        statements = '\n'.join(self.visit(child, tabs + 1) for child in node.statements)
+        return f'{ans}\n{cond}\n{statements}'
+
+    @visitor.when(IfElseEndNode)
+    def visit(self, node, tabs=0):
+        ans = '\t' * tabs + f'\\__IfElseEndNode if [<cond>] : [<stat>; ... <stat>;] else : [<stat>; ... <stat>;]'
+        cond = self.visit(node.cond, tabs + 1)
+        statements_if = '\n'.join(self.visit(child, tabs + 1) for child in node.statements_if)
+        statements_else = '\n'.join(self.visit(child, tabs + 1) for child in node.statements_else)
+        return f'{ans}\n{cond}\n{statements_if}\n{statements_else}'
+
+    @visitor.when(WhileNode)
+    def visit(self, node, tabs=0):
+        ans = '\t' * tabs + f'\\__WhileNode while [<cond>] : [<stat>; ... <stat>;]'
+        cond = self.visit(node.cond, tabs + 1)
+        statements = '\n'.join(self.visit(child, tabs + 1) for child in node.statements)
+        return f'{ans}\n{cond}\n{statements}'

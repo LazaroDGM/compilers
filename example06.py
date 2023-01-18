@@ -51,7 +51,7 @@ class Language06:
         stat %= return_stat, lambda h,s: s[1]
 
         let_var %= var + typex + idx + asign + arg, lambda h,s: VarDeclarationNode(idx= s[3], ttype=s[2], expr=s[5])
-        let_var %= var + typex + idx, lambda h,s: VarDeclarationNode(idx= s[3], ttype=s[2], expr=None)
+        #let_var %= var + typex + idx, lambda h,s: VarDeclarationNode(idx= s[3], ttype=s[2], expr=None)
 
         let_const %= const + typex + idx + asign + arg, lambda h,s: ConstDeclarationNode(idx= s[3], ttype=s[2], expr=s[5])
 
@@ -66,7 +66,7 @@ class Language06:
         def_func %= func + idx + opar + cpar + okey + stat_list + ckey, \
             lambda h,s: FuncDeclarationNode(idx= s[2], params= ParamListNode([]), return_type= None, body=s[6])
 
-        return_stat %= returnx + arg, lambda h,s: ReturnNode(s[2])
+        return_stat %= returnx + arg, lambda h,s: ReturnNode(s[2])        
 
         if_stat %= ifx + opar + comp_list + cpar + colon + stat_list + endif, lambda h,s: IfEndNode(s[3], s[6])
         if_stat %= ifx + opar + comp_list + cpar + colon + stat_list + elsex + stat_list + endif, lambda h,s: IfElseEndNode(s[3], s[6], s[8])
@@ -219,13 +219,30 @@ var int x=5;
 func F(int y) -> int {    
     hola = 8;
 
+    if ( 7==8 && hola-5 == 3 ) :
+        var int yuma = 90;
+        yuma = 89;
+    endif;
+
+
     func G(bool h) -> int {
-        var i = 90;        
+        h = 90;   
+
+        return H(7+peo, jump*7);
     };
     const int mul = 5;
-    var int x = 8;
+    mul = 8;
     var int z = 7;
     return mul * (x+y);
+};
+
+func G(bool h) -> int {
+    h = ui;
+    return 78;
+};
+
+func H(int k) {
+    k=78;
 };
 x = 6;
 var int z = F(6, x);
