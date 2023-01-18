@@ -10,8 +10,8 @@ class Node:
 ##################################
 class ProgramNode(Node):
     def __init__(self, sec_maps, sec_inst):
-        self.sec_map = sec_maps
-        self.sec_ints = sec_inst
+        self.sec_maps = sec_maps
+        self.sec_inst = sec_inst
 
 class SecMapsNode(Node):
     def __init__(self, maps) -> None:

@@ -2,6 +2,7 @@ from tools.shift_reduce import evaluate_reverse_parse, SLR1Parser, table_to_data
 from tools.lexer import Lexer
 from tools.pycompiler import Grammar, Terminal, NonTerminal, Token
 from utils07.utils import *
+from utils07.check1 import TypeCollector
 
 class Language07:
     def __init__(self) -> None:
@@ -254,3 +255,8 @@ label ENDWHILE:
 
 L.is_Valid(text)
 ast = L.Build_AST(text)
+
+type_collector = TypeCollector()
+errors = type_collector.visit(ast)
+for i, error in enumerate(errors, 1):
+    print(f'{i}.', error)
