@@ -42,11 +42,6 @@ class BinaryNode(ExpressionNode):
         self.left = left
         self.right = right
 
-
-    @staticmethod
-    def operate(lvalue, rvalue):
-        raise NotImplementedError()
-
 ####################################
 
 class ConstantNumNode(AtomicNode):
