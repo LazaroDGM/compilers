@@ -102,6 +102,55 @@ class Language07:
         self.parser = parser
 
         ########################################################
+        #                        LEXER                         #
+        ########################################################
+        nonzero_digits = '|'.join(str(n) for n in range(1,10))
+        letters_lower = '|'.join(chr(n) for n in range(ord('a'),ord('z')+1))
+        letters_power = '|'.join(chr(n) for n in range(ord('A'),ord('Z')+1))
+        lexer = Lexer(
+            [
+                ('space', '( |\t|\n)( |\t|\n)*'),  
+
+                (squarex, 'B|H|V'),
+                (dirx, 'N|S|E|W'),
+
+                (sec_map_name, '\.MAPS'),
+                (sec_inst_name, '\.INST'),
+
+                (semi,';'),
+                (comma, ','),
+                (obrac, '\['),
+                (cbrac, '\]'),
+                (okey, '{'),
+                (ckey, '}'),
+                (colon,':'),
+
+                (add, 'add'),
+                (sub, 'sub'),
+                (mul, 'mul'),
+                (div, 'div'),
+                (mod, 'mod'),
+
+                (pop, 'pop'),
+                (push, 'push'),
+                (overlap, 'overlap'),
+                (pull, 'pull'),
+
+                (goto, 'goto'),
+                (ifzero, 'ifzero'),
+                (ifpositive, 'ifpositive'),
+                (ifnegative, 'ifnegative'),
+
+                (mapx, 'map'),
+                
+                (numx,f'({nonzero_digits})(0|{nonzero_digits})*'),                
+                (idx, f'({letters_lower}|{letters_power})({letters_lower}|{letters_power}|{nonzero_digits}|0)*')
+
+            ],
+            G.EOF
+        )
+        self.lexer = lexer
+        ########################################################
         # ==================================================== #
         ########################################################
 
