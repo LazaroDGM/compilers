@@ -4,6 +4,7 @@ from tools.pycompiler import Grammar, Terminal, NonTerminal, Token
 from utils07.utils import *
 from utils07.type_collector import TypeCollector
 from utils07.semantic_check import SemanticCheck
+from utils07.instruction_generator import InstructionGenerator
 
 class Language07:
     def __init__(self) -> None:
@@ -267,6 +268,64 @@ label ENDWHILE:
 }
 '''
 
+text = '''
+.MAPS{
+    map M1:
+    [
+        [V,V,V,V],
+        [V,V,V,V],
+        [V,V,V,V]
+    ]
+
+    map M2:
+    [
+        [0,V,V,V],
+        [5,2,V,V],
+        [V,V,V,V]
+    ]
+}
+
+.INST{
+    overlap M2;
+    
+    mov S;
+    mov S;
+    mov E;
+    mov E;
+    mov E;
+    mov E;
+    mov N;
+    mov W;
+    mov W;
+    mov N;
+    mov E;
+
+    mov S;
+
+label WHILE:
+    copy;
+    dec;
+    goto ENDWHILE ifzero;
+
+    mov E;
+    copy;
+    add;
+    paste;
+
+    mov W;
+    goto WHILE;
+
+    copy;    
+    copy;
+
+label ENDWHILE:
+    mov E;
+    copy;
+
+}
+'''
+
+
 L.is_Valid(text)
 ast = L.Build_AST(text)
 
@@ -285,4 +344,7 @@ for i, error in enumerate(errors, 1):
 print('Advertencias:')
 for i, warn in enumerate(warnings, 1):
     print(f'{i}.', warn)
+
+inst_generator = InstructionGenerator()
+inst_generator.visit(ast)
 
