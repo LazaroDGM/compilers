@@ -1,6 +1,7 @@
 from tools.shift_reduce import evaluate_reverse_parse, SLR1Parser, table_to_dataframe
 from tools.lexer import Lexer
 from tools.pycompiler import Grammar, Terminal, NonTerminal, Token
+from utils07.utils import *
 
 class Language07:
     def __init__(self) -> None:
@@ -34,74 +35,74 @@ class Language07:
         push, pop, mem, overlap, pull = G.Terminals('push pop mem overlap pull')
 
         
-        program %= maps_sec + inst_sec
+        program %= maps_sec + inst_sec, lambda h,s: ProgramNode(s[1], s[2])
 
         ###########  .MAPS #####################
-        maps_sec %= sec_map_name + okey + maps_list + ckey
+        maps_sec %= sec_map_name + okey + maps_list + ckey, lambda h,s: SecMapsNode(s[3])
 
-        maps_list %= def_map + maps_list
-        maps_list %= def_map
+        maps_list %= def_map + maps_list, lambda h,s: [ s[1] ] + s[2]
+        maps_list %= def_map, lambda h,s: [ s[1] ]
 
-        def_map %= mapx + idx + colon + body_map
+        def_map %= mapx + idx + colon + body_map, lambda h,s: MapDeclaration(idx= s[2], map= s[4])
 
-        body_map %= obrac + rows_map + cbrac
+        body_map %= obrac + rows_map + cbrac, lambda h,s: s[2]
 
-        rows_map %= obrac + row_map + cbrac + comma + rows_map
-        rows_map %= obrac + row_map + cbrac
+        rows_map %= obrac + row_map + cbrac + comma + rows_map, lambda h,s: [ s[2] ] + s[5]
+        rows_map %= obrac + row_map + cbrac, lambda h,s: [ s[2] ]
 
-        row_map %= square + comma + row_map
-        row_map %= square
+        row_map %= square + comma + row_map,lambda h,s: [ s[1] ] + s[3]
+        row_map %= square, lambda h,s: [ s[1] ]
 
-        square %= squarex
-        square %= numx
+        square %= squarex, lambda h,s: SquareNode(s[1])
+        square %= numx, lambda h,s: SquareNode(s[1])
 
         ##########  .INST ######################
-        inst_sec %= sec_inst_name + okey + inst_list + ckey
+        inst_sec %= sec_inst_name + okey + inst_list + ckey, lambda h,s: SecInstructionNode(s[3])
 
-        inst_list %= inst + inst_list
-        inst_list %= inst
+        inst_list %= inst + inst_list, lambda h,s: [ s[1] ] + s[2]
+        inst_list %= inst, lambda h,s: [ s[1] ]
 
-        inst %= mov_i
-        inst %= copy_i
-        inst %= paste_i
+        inst %= mov_i, lambda h,s: s[1]
+        inst %= copy_i, lambda h,s: s[1]
+        inst %= paste_i, lambda h,s: s[1]
 
-        inst %= add_i
-        inst %= sub_i
-        inst %= mul_i
-        inst %= div_i
-        inst %= mod_i
-        inst %= inc_i
-        inst %= dec_i
+        inst %= add_i, lambda h,s: s[1]
+        inst %= sub_i, lambda h,s: s[1]
+        inst %= mul_i, lambda h,s: s[1]
+        inst %= div_i, lambda h,s: s[1]
+        inst %= mod_i, lambda h,s: s[1]
+        inst %= inc_i, lambda h,s: s[1]
+        inst %= dec_i, lambda h,s: s[1]
 
-        inst %= goto_i
-        inst %= label_i
-        inst %= overlap_i
-        inst %= pull_i
-        inst %= push_i
-        inst %= pop_i
+        inst %= goto_i, lambda h,s: s[1]
+        inst %= label_i, lambda h,s: s[1]
+        inst %= overlap_i, lambda h,s: s[1]
+        inst %= pull_i, lambda h,s: s[1]
+        inst %= push_i, lambda h,s: s[1]
+        inst %= pop_i, lambda h,s: s[1]
 
-        mov_i %= mov + dirx + semi
-        copy_i %= copy + semi
-        paste_i %= paste + semi
+        mov_i %= mov + dirx + semi, lambda h,s: MovNode(s[2])
+        copy_i %= copy + semi, lambda h,s: CopyNode()
+        paste_i %= paste + semi, lambda h,s: PasteNode()
 
-        add_i %= add + semi
-        sub_i %= sub + semi
-        mul_i %= mul + semi
-        div_i %= div + semi
-        mod_i %= mod + semi        
-        dec_i %= dec + semi
-        inc_i %= inc + semi
+        add_i %= add + semi, lambda h,s: AddNode()
+        sub_i %= sub + semi, lambda h,s: SubNode()
+        mul_i %= mul + semi, lambda h,s: MulNode()
+        div_i %= div + semi, lambda h,s: DivNode()
+        mod_i %= mod + semi, lambda h,s: ModNode()
+        dec_i %= dec + semi, lambda h,s: DecNode()
+        inc_i %= inc + semi, lambda h,s: IncNode()
 
-        label_i %= label + idx + colon
-        overlap_i %= overlap + idx + semi
-        pull_i %= pull + semi
-        push_i %= push + semi
-        pop_i %= pop + semi
+        label_i %= label + idx + colon, lambda h,s: LabelNode(s[2])
+        overlap_i %= overlap + idx + semi, lambda h,s: OverlapNode(s[2])
+        pull_i %= pull + semi, lambda h,s: PullNode()
+        push_i %= push + semi, lambda h,s: PushNode()
+        pop_i %= pop + semi, lambda h,s: PopNode()
 
-        goto_i %= goto + idx + semi
-        goto_i %= goto + idx + ifzero + semi
-        goto_i %= goto + idx + ifpositive + semi
-        goto_i %= goto + idx + ifnegative + semi
+        goto_i %= goto + idx + semi, lambda h,s: GotoNode(s[2])
+        goto_i %= goto + idx + ifzero + semi, lambda h,s: GotoIfZeroNode(s[2])
+        goto_i %= goto + idx + ifpositive + semi, lambda h,s: GotoIfPositive(s[2])
+        goto_i %= goto + idx + ifnegative + semi, lambda h,s: GotoIfNegative(s[2])
 
         ########################################################
         #                    PARSER SLR(1)                     #
@@ -170,6 +171,19 @@ class Language07:
         ########################################################
     
     ####################################
+    #                AST               #
+    ####################################
+    def Build_AST(self, text, verbose=False):
+        all_tokens = self.lexer(text)
+        tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
+        right_parse, operations = self.parser(tokens)        
+        ast = evaluate_reverse_parse(right_parse, operations, tokens)
+
+        if verbose:
+            self.Print(ast)
+        return ast
+
+    ####################################
     #              VALID               #
     ####################################
     def is_Valid(self, text, verbose=False):
@@ -198,7 +212,7 @@ text = '''
 }
 
 .INST{
-    overlap M1;
+    overlap M2;
     
     mov S;
     mov S;
@@ -239,3 +253,4 @@ label ENDWHILE:
 '''
 
 L.is_Valid(text)
+ast = L.Build_AST(text)
