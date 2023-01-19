@@ -177,6 +177,11 @@ class Language07:
             G.EOF
         )
         self.lexer = lexer
+
+        self.type_collector = TypeCollector()
+        self.semantic_check = SemanticCheck()
+        self.inst_generator = InstructionGenerator()
+        self.code_generator = CodeGenerator()        
         ########################################################
         # ==================================================== #
         ########################################################
@@ -184,23 +189,66 @@ class Language07:
     ####################################
     #                AST               #
     ####################################
-    def Build_AST(self, text, verbose=False):
+    def Build_AST_Pure(self, text, verbose=False):
+        all_tokens = self.lexer(text)
+        tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
+        right_parse, operations = self.parser(tokens)        
+        ast = evaluate_reverse_parse(right_parse, operations, tokens)
+        if verbose:
+            self.Print(ast)        
+        return ast
+
+    def Build_AST_Checked(self, text):
         all_tokens = self.lexer(text)
         tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
         right_parse, operations = self.parser(tokens)        
         ast = evaluate_reverse_parse(right_parse, operations, tokens)
 
-        if verbose:
-            self.Print(ast)
+        print('<----------Recolector----------->')        
+        errors, context = self.type_collector.visit(ast)
+        for i, error in enumerate(errors, 1):
+            print(f'Error {i}.', error)
+
+        print('<----------Semantica----------->')        
+        errors, warnings, context = self.semantic_check.visit(ast, context)
+        for i, error in enumerate(errors, 1):
+            print(f'Error {i}:', error)        
+        for i, warn in enumerate(warnings, 1):
+            print(f'Advertencia {i}:', warn)
+        
         return ast
+
+    def Gen_Code(self, text):
+        all_tokens = self.lexer(text)
+        tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
+        right_parse, operations = self.parser(tokens)        
+        ast = evaluate_reverse_parse(right_parse, operations, tokens)
+
+        print('<----------Recolector----------->')        
+        errors1, context = self.type_collector.visit(ast)
+        for i, error in enumerate(errors1, 1):
+            print(f'{i}.', error)
+
+        print('<----------Semantica----------->')        
+        errors2, warnings, context = self.semantic_check.visit(ast, context)
+        for i, error in enumerate(errors2, 1):
+            print(f'Error {i}:', error)        
+        for i, warn in enumerate(warnings, 1):
+            print(f'Advertencia {i}:', warn)
+
+        if len(errors1) > 0 or len(errors2) > 0:
+            return None        
+        context = self.code_generator.visit(ast, context)        
+        return context.code
+
 
     ####################################
     #              VALID               #
     ####################################
-    def is_Valid(self, text, verbose=False):
+    def is_Valid_Sintactic(self, text, verbose=False):
         all_tokens = self.lexer(text)
         tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
-        right_parse, operations = self.parser(tokens)  
+        right_parse, operations = self.parser(tokens)
         return True
 
 L = Language07()
@@ -303,6 +351,7 @@ text = '''
 
     mov S;
 
+label PorGusto:
 label WHILE:
     copy;
     dec;
@@ -325,40 +374,8 @@ label ENDWHILE:
     print;
 
 }
-'''
+'''    
 
-
-L.is_Valid(text)
-ast = L.Build_AST(text)
-
-print('<----------Recolector----------->')
-type_collector = TypeCollector()
-errors, context = type_collector.visit(ast)
-for i, error in enumerate(errors, 1):
-    print(f'{i}.', error)
-
-semantic_check = SemanticCheck()
-errors, warnings, context =semantic_check.visit(ast, context)
-print('<----------Semantica----------->')
-print('Errores:')
-for i, error in enumerate(errors, 1):
-    print(f'{i}.', error)
-print('Advertencias:')
-for i, warn in enumerate(warnings, 1):
-    print(f'{i}.', warn)
-
-#inst_generator = InstructionGenerator()
-#context = inst_generator.visit(ast, context)
-#
-#robot = context.robot
-#robot: Robot
-#
-#for inst in robot.instructions:
-#    pass
-    
-code_generator = CodeGenerator()
-context = code_generator.visit(ast, context)
-
-print(context.code)
+print(L.Gen_Code(text))
 
 

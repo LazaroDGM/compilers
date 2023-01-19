@@ -48,8 +48,6 @@ import enum
         context.code+=\
 '''
 ###### MAPS ######
-
-
 '''        
         for mapx in node.maps:
             self.visit(mapx, context)        
