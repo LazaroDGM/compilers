@@ -5,6 +5,7 @@ from utils07.utils import *
 from utils07.type_collector import TypeCollector
 from utils07.semantic_check import SemanticCheck
 from utils07.instruction_generator import InstructionGenerator
+from utils07.code_generator import CodeGenerator
 from utils07.assembly import Robot
 
 class Language07:
@@ -274,8 +275,8 @@ text = '''
     map M1:
     [
         [V,V,V,V],
-        [V,V,V,V],
-        [V,V,V,V]
+        [V,V,H,V],
+        [V,190,V,H]
     ]
 
     map M2:
@@ -346,15 +347,18 @@ print('Advertencias:')
 for i, warn in enumerate(warnings, 1):
     print(f'{i}.', warn)
 
-inst_generator = InstructionGenerator()
-context = inst_generator.visit(ast, context)
-
-robot = context.robot
-robot: Robot
-
-for inst in robot.instructions:
-    pass
+#inst_generator = InstructionGenerator()
+#context = inst_generator.visit(ast, context)
+#
+#robot = context.robot
+#robot: Robot
+#
+#for inst in robot.instructions:
+#    pass
     
+code_generator = CodeGenerator()
+context = code_generator.visit(ast, context)
 
+print(context.code)
 
 

@@ -20,6 +20,8 @@ class Context:
         self.reals_maps = {}
         self.robot = None
 
+        self.code = ''
+
         self.labels = {}
         self.labels_invocation = {}
         self.current_index = 0
