@@ -4,6 +4,9 @@ from tools.pycompiler import Grammar, Terminal, NonTerminal, Token
 from utils07.utils import *
 from utils07.type_collector import TypeCollector
 from utils07.semantic_check import SemanticCheck
+from utils07.instruction_generator import InstructionGenerator
+from utils07.code_generator import CodeGenerator
+from utils07.assembly import Robot
 
 class Language07:
     def __init__(self) -> None:
@@ -20,7 +23,7 @@ class Language07:
         body_map, rows_map, row_map, square_list, square =G.NonTerminals('<body-map> <rows-map> <row-map> <square-list> <square>')
         ############ .INST #############
         inst_sec, inst_list, inst = G.NonTerminals('<inst-sec> <inst-list> <inst>')
-        mov_i, copy_i, paste_i, nop_i = G.NonTerminals('<mov> <copy> <paste> <nop>')
+        mov_i, copy_i, paste_i, nop_i, print_i = G.NonTerminals('<mov> <copy> <paste> <nop> <print>')
         add_i, sub_i, mul_i, div_i, mod_i, inc_i, dec_i = G.NonTerminals('<add> <sub> <mul> <div> <mod> <inc> <dec>')
         goto_i, label_i = G.NonTerminals('<goto> <label>')
         push_i, pop_i, push_mem, pop_mem, overlap_i, pull_i = G.NonTerminals('<push> <pop> <push-mem> <pop-mem> <overlap> <pull>')
@@ -31,7 +34,7 @@ class Language07:
         
         sec_map_name, sec_inst_name = G.Terminals('.MAPS .INST')
 
-        mov, copy, paste, mapx, nop = G.Terminals('mov copy paste map nop')
+        mov, copy, paste, mapx, nop, printx = G.Terminals('mov copy paste map nop print')
         add, sub, mul, div, mod, inc, dec = G.Terminals('add sub mul div mod inc dec')
         goto, label, ifzero, ifpositive, ifnegative = G.Terminals('goto label ifzero ifpositive ifnegative')
         push, pop, mem, overlap, pull = G.Terminals('push pop mem overlap pull')
@@ -68,6 +71,7 @@ class Language07:
         inst %= copy_i, lambda h,s: s[1]
         inst %= paste_i, lambda h,s: s[1]
         inst %= nop_i, lambda h,s: s[1]
+        inst %= print_i, lambda h,s: s[1]
 
         inst %= add_i, lambda h,s: s[1]
         inst %= sub_i, lambda h,s: s[1]
@@ -88,6 +92,7 @@ class Language07:
         copy_i %= copy + semi, lambda h,s: CopyNode()
         paste_i %= paste + semi, lambda h,s: PasteNode()
         nop_i %= nop + semi, lambda h,s: NopNode()
+        print_i %= printx + semi, lambda h,s: PrintNode()
 
         add_i %= add + semi, lambda h,s: AddNode()
         sub_i %= sub + semi, lambda h,s: SubNode()
@@ -142,6 +147,7 @@ class Language07:
                 (copy, 'copy'),
                 (paste, 'paste'),
                 (nop, 'nop'),
+                (printx, 'print'),
 
                 (add, 'add'),
                 (sub, 'sub'),
@@ -171,6 +177,11 @@ class Language07:
             G.EOF
         )
         self.lexer = lexer
+
+        self.type_collector = TypeCollector()
+        self.semantic_check = SemanticCheck()
+        self.inst_generator = InstructionGenerator()
+        self.code_generator = CodeGenerator()        
         ########################################################
         # ==================================================== #
         ########################################################
@@ -178,23 +189,96 @@ class Language07:
     ####################################
     #                AST               #
     ####################################
-    def Build_AST(self, text, verbose=False):
+    def Build_AST_Pure(self, text, verbose=False):
+        all_tokens = self.lexer(text)
+        tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
+        right_parse, operations = self.parser(tokens)        
+        ast = evaluate_reverse_parse(right_parse, operations, tokens)
+        if verbose:
+            self.Print(ast)        
+        return ast
+
+    def Build_AST_Checked(self, text):
         all_tokens = self.lexer(text)
         tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
         right_parse, operations = self.parser(tokens)        
         ast = evaluate_reverse_parse(right_parse, operations, tokens)
 
-        if verbose:
-            self.Print(ast)
+        print('<----------Recolector----------->')        
+        errors, context = self.type_collector.visit(ast)
+        for i, error in enumerate(errors, 1):
+            print(f'Error {i}.', error)
+
+        print('<----------Semantica----------->')        
+        errors, warnings, context = self.semantic_check.visit(ast, context)
+        for i, error in enumerate(errors, 1):
+            print(f'Error {i}:', error)        
+        for i, warn in enumerate(warnings, 1):
+            print(f'Advertencia {i}:', warn)
+        
         return ast
+
+    def Direct_Run(self, text):
+        all_tokens = self.lexer(text)
+        tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
+        right_parse, operations = self.parser(tokens)        
+        ast = evaluate_reverse_parse(right_parse, operations, tokens)
+
+        print('<----------Recolector----------->')        
+        errors1, context = self.type_collector.visit(ast)
+        for i, error in enumerate(errors1, 1):
+            print(f'{i}.', error)
+
+        print('<----------Semantica----------->')        
+        errors2, warnings, context = self.semantic_check.visit(ast, context)
+        for i, error in enumerate(errors2, 1):
+            print(f'Error {i}:', error)        
+        for i, warn in enumerate(warnings, 1):
+            print(f'Advertencia {i}:', warn)
+
+        if len(errors1) > 0 or len(errors2) > 0:
+            return None        
+        context = self.inst_generator.visit(ast, context)
+        try:
+            for inst in context.robot.instructions:
+                pass
+        except Exception as e:
+            print('Error en tiempo de Ejecucion en :')
+            print(e)
+        return True
+        
+
+    def Gen_Code(self, text):
+        all_tokens = self.lexer(text)
+        tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
+        right_parse, operations = self.parser(tokens)        
+        ast = evaluate_reverse_parse(right_parse, operations, tokens)
+
+        print('<----------Recolector----------->')        
+        errors1, context = self.type_collector.visit(ast)
+        for i, error in enumerate(errors1, 1):
+            print(f'{i}.', error)
+
+        print('<----------Semantica----------->')        
+        errors2, warnings, context = self.semantic_check.visit(ast, context)
+        for i, error in enumerate(errors2, 1):
+            print(f'Error {i}:', error)        
+        for i, warn in enumerate(warnings, 1):
+            print(f'Advertencia {i}:', warn)
+
+        if len(errors1) > 0 or len(errors2) > 0:
+            return None        
+        context = self.code_generator.visit(ast, context)        
+        return context.code
+
 
     ####################################
     #              VALID               #
     ####################################
-    def is_Valid(self, text, verbose=False):
+    def is_Valid_Sintactic(self, text, verbose=False):
         all_tokens = self.lexer(text)
         tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
-        right_parse, operations = self.parser(tokens)  
+        right_parse, operations = self.parser(tokens)
         return True
 
 L = Language07()
@@ -264,22 +348,65 @@ label ENDWHILE:
 }
 '''
 
-L.is_Valid(text)
-ast = L.Build_AST(text)
+text = '''
+.MAPS{
+    map M1:
+    [
+        [V,V,V,V],
+        [V,V,H,V],
+        [V,190,V,H]
+    ]
 
-print('<----------Recolector----------->')
-type_collector = TypeCollector()
-errors, context = type_collector.visit(ast)
-for i, error in enumerate(errors, 1):
-    print(f'{i}.', error)
+    map M2:
+    [
+        [0,V,V,V],
+        [5,2,V,V],
+        [V,V,V,V]
+    ]
+}
 
-semantic_check = SemanticCheck()
-errors, warnings, context =semantic_check.visit(ast, context)
-print('<----------Semantica----------->')
-print('Errores:')
-for i, error in enumerate(errors, 1):
-    print(f'{i}.', error)
-print('Advertencias:')
-for i, warn in enumerate(warnings, 1):
-    print(f'{i}.', warn)
+.INST{
+    overlap M2;
+    
+    mov S;
+    mov S;
+    mov E;
+    mov E;
+    mov E;    
+    mov N;
+    mov W;
+    mov W;
+    mov N;
+    mov W;
+
+    mov S;
+
+label PorGusto:
+label WHILE:
+    copy;
+    dec;
+    goto ENDWHILE ifzero;
+
+    mov E;
+    copy;
+    add;
+    paste;
+
+    mov W;
+    goto WHILE;
+
+    copy;    
+    copy;
+
+label ENDWHILE:
+    mov E;
+    copy;
+    print;
+
+}
+'''    
+
+print(L.Gen_Code(text))
+#L.Direct_Run(text)
+
 

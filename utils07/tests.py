@@ -1,28 +1,30 @@
 from time import sleep
-from assembly import Robot, map, DIR
+try:
+    from assembly import Robot, Map, DIR
+except:
+    from utils07.assembly import Robot, Map, DIR
+
+class Agent:
+    def __init__(self):
+        self.stack = []
+    def func(self, args):
+        self.stack.append(4)
+
+class Action:
+    def __init__(self) -> None:
+        self.stack = []
+    def Add(self, func, args):
+        self.stack.append((func, args))
 
 
-# class Agent:
-#     def __init__(self):
-#         self.stack = []
-#     def func(self, args):
-#         self.stack.append(4)
 
-# class Action:
-#     def __init__(self) -> None:
-#         self.stack = []
-#     def Add(self, func, args):
-#         self.stack.append((func, args))
+agent = Agent()
+action = Action()
 
+action.Add(agent.func, [])
+action.stack[-1][0](action.stack[-1][1])
 
-
-# agent = Agent()
-# action = Action()
-
-# action.Add(agent.func, [])
-# action.stack[-1][0](action.stack[-1][1])
-
-# print(agent.stack)
+print(agent.stack)
 
 
 
@@ -70,7 +72,7 @@ from assembly import Robot, map, DIR
 
 
 
-################# Test 3 #################
+# ################ Test 3 #################
 
 # mapp = map((5, 5))
 # robot = Robot(mapp)
@@ -95,7 +97,7 @@ from assembly import Robot, map, DIR
 # print(item)
 
 
-################# Test 4 #################
+# ################ Test 4 #################
 
 # class A:
 #     def __init__(self) -> None:
@@ -104,7 +106,7 @@ from assembly import Robot, map, DIR
 # a = A()
 # print(a.a, a.b)
 
-################# Test 5 #################
+# ################ Test 5 #################
 # mapp = map(dimension=(5, 5))
 # robot = Robot()
 
@@ -127,7 +129,7 @@ from assembly import Robot, map, DIR
 #     print(f"Se ha realizado la instruccion: {instruction}")
 
 
-################# Test 6 #################
+# ################ Test 6 #################
 
 # mapp.addPipe((0, 0), (4, 4))
 # for i in range(mapp.getLength[0]):
@@ -146,7 +148,7 @@ from assembly import Robot, map, DIR
 # print(robot.hand_box)
 
 
-################# Test 7 #################
+# ################ Test 7 #################
 # map1 = map(dimension=(6, 6))
 # map1.addHamper((0, 0))
 # map1.push(2, (0, 0))
@@ -189,7 +191,7 @@ from assembly import Robot, map, DIR
 # print(robot.map.field_values[0][0])
 
 
-################# Test 8 #################
+# ################ Test 8 #################
 
 
 # mapp = map(dimension=(3, 4))
@@ -224,7 +226,7 @@ from assembly import Robot, map, DIR
 #     print(i)
 
 
-################# Test 9 - Fibonacci #################
+# ################ Test 9 - Fibonacci #################
 
 # mapp = map(dimension=(2, 2))
 # mapp[0, 0] = 1
@@ -257,7 +259,7 @@ from assembly import Robot, map, DIR
 # for i in robot.instructions:
 #     a = i
 
-################# Test 9 - Fibonacci con Memoria #################
+# ################ Test 9 - Fibonacci con Memoria #################
 
 # mapp = map(dimension=(2, 2))
 # mapp.addPipe((0, 0), (1, 0))
@@ -289,26 +291,26 @@ from assembly import Robot, map, DIR
 # for i in robot.instructions:
 #     a = i
 
-################# Test 10 - Potencia Recursiva #################
+# ################ Test 10 - Potencia Recursiva #################
 
-mapp = map(dimension=(2, 2))
-mapp[0, 0] = 4
-mapp[0, 1] = 3
-robot = Robot()
+# mapp = map(dimension=(2, 2))
+# mapp[0, 0] = 4
+# mapp[0, 1] = 3
+# robot = Robot()
 
-robot.enqueue_instruction(robot.overlap, [mapp])                                                    # 0
-robot.enqueue_instruction(robot.move, [DIR.E])                                                       # 1
-robot.enqueue_instruction(robot.decrem, [])                                                             # 2
-robot.enqueue_instruction(robot.copy, [])                                                                  # 3
-robot.enqueue_instruction(robot.GoToIfZero, [11])                                                   # 4
-robot.enqueue_instruction(robot.push_mem, [])                                                       # 5
-robot.enqueue_instruction(robot.overlap, [])                                                            # 6
-robot.enqueue_instruction(robot.enqueue_instruction, [robot.pull, []])                     # 7
-robot.enqueue_instruction(robot.enqueue_instruction, [robot.move, [DIR.W]])       # 8
-robot.enqueue_instruction(robot.enqueue_instruction, [robot.mul, []])                    # 9
-robot.enqueue_instruction(robot.GoTo, [1])                                                             # 10
-robot.enqueue_instruction(robot.enqueue_instruction, [robot.printHandBox, []])    # 11
+# robot.enqueue_instruction(robot.overlap, [mapp])                                                    # 0
+# robot.enqueue_instruction(robot.move, [DIR.E])                                                       # 1
+# robot.enqueue_instruction(robot.decrem, [])                                                             # 2
+# robot.enqueue_instruction(robot.copy, [])                                                                  # 3
+# robot.enqueue_instruction(robot.GoToIfZero, [11])                                                   # 4
+# robot.enqueue_instruction(robot.push_mem, [])                                                       # 5
+# robot.enqueue_instruction(robot.overlap, [])                                                            # 6
+# robot.enqueue_instruction(robot.enqueue_instruction, [robot.pull, []])                     # 7
+# robot.enqueue_instruction(robot.enqueue_instruction, [robot.move, [DIR.W]])       # 8
+# robot.enqueue_instruction(robot.enqueue_instruction, [robot.mul, []])                    # 9
+# robot.enqueue_instruction(robot.GoTo, [1])                                                             # 10
+# robot.enqueue_instruction(robot.enqueue_instruction, [robot.printHandBox, []])    # 11
 
 
-for i in robot.instructions:
-    a = 1
+# for i in robot.instructions:
+#     a = 1

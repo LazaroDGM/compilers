@@ -17,10 +17,16 @@ class Context:
     def __init__(self):
         self.maps = {}
         self.maps_invocation = {}
+        self.reals_maps = {}
+        self.robot = None
+
+        self.code = ''
 
         self.labels = {}
         self.labels_invocation = {}
         self.current_index = 0
+
+
 
 
     ###################### MAPS ########################

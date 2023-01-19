@@ -117,3 +117,6 @@ class PopMemNode(InstructionNode):
 
 class NopNode(InstructionNode):
     pass
+
+class PrintNode(InstructionNode):
+    pass
