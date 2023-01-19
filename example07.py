@@ -218,6 +218,36 @@ class Language07:
         
         return ast
 
+    def Direct_Run(self, text):
+        all_tokens = self.lexer(text)
+        tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
+        right_parse, operations = self.parser(tokens)        
+        ast = evaluate_reverse_parse(right_parse, operations, tokens)
+
+        print('<----------Recolector----------->')        
+        errors1, context = self.type_collector.visit(ast)
+        for i, error in enumerate(errors1, 1):
+            print(f'{i}.', error)
+
+        print('<----------Semantica----------->')        
+        errors2, warnings, context = self.semantic_check.visit(ast, context)
+        for i, error in enumerate(errors2, 1):
+            print(f'Error {i}:', error)        
+        for i, warn in enumerate(warnings, 1):
+            print(f'Advertencia {i}:', warn)
+
+        if len(errors1) > 0 or len(errors2) > 0:
+            return None        
+        context = self.inst_generator.visit(ast, context)
+        try:
+            for inst in context.robot.instructions:
+                pass
+        except Exception as e:
+            print('Error en tiempo de Ejecucion en :')
+            print(e)
+        return True
+        
+
     def Gen_Code(self, text):
         all_tokens = self.lexer(text)
         tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
@@ -377,5 +407,6 @@ label ENDWHILE:
 '''    
 
 print(L.Gen_Code(text))
+#L.Direct_Run(text)
 
 
