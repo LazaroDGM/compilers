@@ -5,6 +5,7 @@ from utils07.utils import *
 from utils07.type_collector import TypeCollector
 from utils07.semantic_check import SemanticCheck
 from utils07.instruction_generator import InstructionGenerator
+from utils07.assembly import Robot
 
 class Language07:
     def __init__(self) -> None:
@@ -292,13 +293,12 @@ text = '''
     mov S;
     mov E;
     mov E;
-    mov E;
-    mov E;
+    mov E;    
     mov N;
     mov W;
     mov W;
     mov N;
-    mov E;
+    mov W;
 
     mov S;
 
@@ -321,6 +321,7 @@ label WHILE:
 label ENDWHILE:
     mov E;
     copy;
+    print;
 
 }
 '''
@@ -346,5 +347,14 @@ for i, warn in enumerate(warnings, 1):
     print(f'{i}.', warn)
 
 inst_generator = InstructionGenerator()
-inst_generator.visit(ast)
+context = inst_generator.visit(ast, context)
+
+robot = context.robot
+robot: Robot
+
+for inst in robot.instructions:
+    pass
+    
+
+
 
