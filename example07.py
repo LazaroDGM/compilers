@@ -432,7 +432,7 @@ label ENDWHILE:
 }
 '''    
 
-#print(L.Gen_Code(text))
+print(L.Gen_Code(text))
 L.Direct_Run(text)
 
 
