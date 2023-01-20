@@ -581,9 +581,11 @@ class Token:
         Token's type.
     """
 
-    def __init__(self, lex, token_type):
+    def __init__(self, lex, token_type, row=0, col=0):
         self.lex = lex
         self.token_type = token_type
+        self.row = row
+        self.col = col
 
     def __str__(self):
         return f'{self.token_type}: {self.lex}'
@@ -594,3 +596,6 @@ class Token:
     @property
     def is_valid(self):
         return True
+
+class SintacticException(Exception):
+    pass

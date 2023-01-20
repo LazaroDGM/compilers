@@ -1,10 +1,10 @@
 try:
     from automata import State
-    from pycompiler import Grammar, Item, ContainerSet, EOF
+    from pycompiler import Grammar, Item, ContainerSet, EOF, SintacticException
     from parserLL1 import compute_first_follows, compute_firsts, compute_follows, compute_local_first
 except:
     from tools.automata import State
-    from tools.pycompiler import Grammar, Item, ContainerSet, EOF
+    from tools.pycompiler import Grammar, Item, ContainerSet, EOF, SintacticException
     from tools.parserLL1 import compute_first_follows, compute_firsts, compute_follows, compute_local_first
 
 try:
@@ -99,7 +99,18 @@ class ShiftReduceParser:
                 ##########################TODO###########################
                 # Mejorar la informacion al detectar error en la cadena #
                 #########################################################
-                raise Exception(f'No se puede parsear la cadena. No se esperaba un token {lookahead}')
+                desire = ''
+                for (state_d, lookahead_d) in self.action.keys():
+                    if state_d == state:
+                        desire += f"- '{lookahead_d}'\n"
+
+                token = w[cursor]
+                err = f'No se puede parsear la cadena. No se esperaba un token {lookahead} '
+                err += f'en la linea {token.row} y columna {token.col}.\n'
+                if len(desire) > 0:
+                    err += 'Se esperaba:\n'
+                    err +=  desire
+                raise SintacticException(err)
             
             action, tag = self.action[state, lookahead]
             

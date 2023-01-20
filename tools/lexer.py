@@ -59,13 +59,22 @@ class Lexer:
         return final, final_lex
     
     def _tokenize(self, text):
-        while len(text) > 0:            
+        row = 0
+        col = 0
+        while len(text) > 0:
             final, final_lex = self._walk(text)
             tag, token_type = min(final.tag)
-            yield final_lex, token_type
+            yield final_lex, token_type, row, col
+
+            splited = final_lex.split('\n')
+            if len(splited) > 1:
+                row += len(splited) - 1
+                col = 0            
+            col += len(splited[-1])
+
             text=text[len(final_lex):]
         
-        yield '$', self.eof
+        yield '$', self.eof, row, col
     
     def __call__(self, text):
-        return [ Token(lex, ttype) for lex, ttype in self._tokenize(text) ]
+        return [ Token(lex, ttype, row, col) for lex, ttype, row, col in self._tokenize(text) ]
