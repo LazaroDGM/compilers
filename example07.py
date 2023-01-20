@@ -173,7 +173,7 @@ class Language07:
 
                 (mapx, 'map'),
                 
-                (numx,f'({nonzero_digits})(0|{nonzero_digits})*'),                
+                (numx,f'({nonzero_digits})(0|{nonzero_digits})*|0'),                
                 (idx, f'({letters_lower}|{letters_power})({letters_lower}|{letters_power}|{nonzero_digits}|0)*')
 
             ],

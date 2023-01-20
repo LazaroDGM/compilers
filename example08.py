@@ -39,13 +39,13 @@ class Language08:
         defx %= map_def
         defx %= function_def
 
-        map_def %= mapx + idx + opar + tuplex + cpar + okey + asign_pos_list + ckey
-        map_def %= mapx + idx + opar + tuplex + cpar + okey + ckey
+        map_def %= mapx + idx + tuplex + okey + asign_pos_list + ckey
+        map_def %= mapx + idx + tuplex + okey + ckey
 
         asign_pos_list %= asign_pos + asign_pos_list
         asign_pos_list %= asign_pos
 
-        asign_pos %= opar + tuplex + cpar + asign + type_pos + semi
+        asign_pos %= tuplex + asign + type_pos + semi
 
         type_pos %= number
         type_pos %= hamper
@@ -80,6 +80,9 @@ class Language08:
         op_inst %= tuplex + asign + tuplex + minus + tuplex + semi
         op_inst %= tuplex + asign + tuplex + star + tuplex + semi
         op_inst %= tuplex + asign + tuplex + div + tuplex + semi
+
+        op_inst %= tuplex + plus + plus + semi
+        op_inst %= tuplex + minus + minus + semi
 
         call_func %= tuplex + asign + callx + idx + withx + tuple_list + semi
         call_func %= tuplex + asign + callx + idx + semi
@@ -154,7 +157,7 @@ class Language08:
                 (mapx, 'map'),
                 (functionx, 'function'),
                 
-                (number,f'({nonzero_digits})(0|{nonzero_digits})*'),
+                (number,f'({nonzero_digits})(0|{nonzero_digits})*|0'),
                 (idx, f'({letters_lower}|{letters_power})({letters_lower}|{letters_power}|{nonzero_digits}|0)*')
 
             ],
@@ -162,8 +165,50 @@ class Language08:
         )
         self.lexer = lexer
 
+    def Parse_Tokens(self, tokens):
+        right_parse, operations = None, None
+        try:
+            right_parse, operations = self.parser(tokens)
+        except SintacticException as e:
+            print(e)
+        except Exception as e:
+            print('Ocurrio un error durante el Parseo')
+        return right_parse, operations
+
+    ####################################
+    #              VALID               #
+    ####################################
+    def is_Valid_Sintactic(self, text, verbose=False):
+        all_tokens = self.lexer(text)
+        tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
+        right_parse, operations = self.Parse_Tokens(tokens) 
+        if right_parse is None or operations is None:
+            return False
+        return True
 
 
+text=\
+'''
+.ROBIL
+
+map M1 (4,5){
+    (0,0) = 0;
+    (1,0) = 5;
+    (1,1) = 1;
+    (0,1) = 2;
+}
+
+function MAIN in M1{
+
+    while (1,0) == (0,0) then
+        (1,1) = (0,1) * (1,1);
+        (1,0)--;
+    endwhile
+
+    print (1,1);
+}
+'''
 
 
 L  =Language08()
+L.is_Valid_Sintactic(text)
