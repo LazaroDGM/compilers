@@ -3,6 +3,7 @@ from tools.lexer import Lexer
 from tools.pycompiler import Grammar, Terminal, NonTerminal, Token, SintacticException
 from utils08.utils import *
 from utils08.name_collector import NameCollector
+from utils08.semantic_check import SemanticCheck
 
 class Language08:
     def __init__(self) -> None:
@@ -175,6 +176,7 @@ class Language08:
         )
         self.lexer = lexer
         self.name_collector = NameCollector()
+        self.semantic_check = SemanticCheck()
 
     def Parse_Tokens(self, tokens):
         right_parse, operations = None, None
@@ -240,6 +242,7 @@ function main in M1{
     endwhile
 
     (3,3) = (3,0)[9];
+    (2,3) = call F2 with (1,1), (2,2);
 
     print (1,1);
     return (0,0);
@@ -249,7 +252,7 @@ map M2 (3,3){
     (0,0) = 7;    
 }
 
-function F1 in M2 {
+function F1 in M90 {
     print (1,1);
 }
 
@@ -264,5 +267,8 @@ L.is_Valid_Sintactic(text)
 ast = L.Build_AST_Pure(text)
 print(ast)
 errors, context = L.name_collector.visit(ast)
+for err in errors:
+    print(err)
+errors, warnings, context = L.semantic_check.visit(ast,context)
 for err in errors:
     print(err)

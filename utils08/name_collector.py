@@ -5,12 +5,14 @@ except:
 
 
 class MapInfo:
-    def __init__(self, idx) -> None:
-        self.id = idx
+    def __init__(self, id) -> None:
+        self.id = id
 
 class FunctionInfo:
-    def __init__(self, idx) -> None:
-        self.id = idx
+    def __init__(self, id, id_map, args) -> None:
+        self.id = id
+        self.id_map = id_map
+        self.args = args
         
 
 class Context:
@@ -50,9 +52,9 @@ class Context:
 
     ###################### INST ########################
 
-    def define_function(self, name):
+    def define_function(self, name, name_map, args):
         if self.get_function_info(name) is None and self.get_map_info(name) is None:
-            label_info = FunctionInfo(name)
+            label_info = FunctionInfo(name, name_map, args)
             self.functions[name] = label_info
             self.functions_invocation[name] = False
             return True
@@ -64,7 +66,7 @@ class Context:
     def get_function_info(self, name):
         return self.functions.get(name, None)
 
-    def unused_labels(self):
+    def unused_functions(self):
         return list(
             filter(
                 lambda name: not self.functions_invocation[name], self.functions.keys()
@@ -111,4 +113,4 @@ class NameCollector(object):
         elif context.is_function_defined(node.id_func):
             self.errors.append(f'Ya existe una funcion definida con el mismo nombre: "{node.id_func}"')
         else:
-            context.define_function(node.id_func)    
+            context.define_function(node.id_func, node.id_map, node.reserving)
