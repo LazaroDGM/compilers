@@ -91,14 +91,26 @@ class LetTupleFromTupleNode(BinaryInstruction):
     pass
 
 class LetTupleFromHamperNode(TernaryInstruction):
-    pass
+    pass       
 
-class OperationInstructionNode(InstructionNode):
-    pass
+class IfEndNode(InstructionNode):
+    def __init__(self, cond, instructions_if) -> None:
+        self.cond = cond 
+        self.instructions_if = instructions_if
+
+class IfElseEndNode(IfEndNode):
+    def __init__(self, cond, instructions_if, instructions_else) -> None:
+        super().__init__(cond, instructions_if)
+        self.instructions_else = instructions_else
+
+class WhileNode(InstructionNode):
+    def __init__(self, cond, instructions_while) -> None:
+        self.cond = cond 
+        self.instructions_while = instructions_while
 
 ###################################
 
-class OperationNode(Node):
+class OperationNode(InstructionNode):
     pass
 
 class AtomicOperationNode(OperationNode):
@@ -135,25 +147,32 @@ class IncNode(BinaryOperationNode):
 class DecNode(BinaryOperationNode):
     pass
 
-class EqualNode(BinaryOperationNode):
+#######################################
+
+class CondNode():
+    def __init__(self, left, right) -> None:
+        self.left = left
+        self.right = right
+
+class EqualNode(CondNode):
     pass
 
-class NotEqualNode(BinaryOperationNode):
+class NotEqualNode(CondNode):
     pass
 
-class LessThanNode(BinaryInstruction):
+class LessThanNode(CondNode):
     pass
 
-class LessThanEqualNode(BinaryInstruction):
+class LessThanEqualNode(CondNode):
     pass
 
-class LessThanNode(BinaryInstruction):
+class LessThanNode(CondNode):
     pass
 
-class GreaterThanNode(BinaryInstruction):
+class GreaterThanNode(CondNode):
     pass
 
-class GreaterThanEqualNode(BinaryInstruction):
+class GreaterThanEqualNode(CondNode):
     pass
 #######################################
 
@@ -165,4 +184,4 @@ class PrintNode(AtomicOperationNode):
 class TupleNode(BinaryNode):
     pass
 
-
+#######################################

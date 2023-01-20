@@ -88,10 +88,10 @@ class Language08:
 
         tuplex %= opar + number + comma + number + cpar, lambda h,s: TupleNode(s[2], s[4])
 
-        if_inst %= ifx + cond + then + inst_list + endif
-        if_inst %= ifx + cond + then + inst_list + elsex +inst_list + endif
+        if_inst %= ifx + cond + then + inst_list + endif, lambda h,s: IfEndNode(s[2], s[4])
+        if_inst %= ifx + cond + then + inst_list + elsex +inst_list + endif, lambda h,s: IfElseEndNode(s[2], s[4], s[6])
 
-        while_inst %= whilex + cond + then + inst_list + endwhile
+        while_inst %= whilex + cond + then + inst_list + endwhile, lambda h,s: WhileNode(s[2], s[4])
 
         cond %= tuplex + eq + tuplex, lambda h,s: EqualNode(s[1], s[3])
         cond %= tuplex + neq + tuplex, lambda h,s: NotEqualNode(s[1], s[3])
