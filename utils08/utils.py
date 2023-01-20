@@ -115,6 +115,10 @@ class CallFunctionNode(InstructionNode):
         self.id = id
         self.tuple_list = tuple_list
 
+class ReturnIstruction(InstructionNode):
+    def __init__(self, tuple) -> None:
+        self.tuple= tuple
+
 
 ###################################
 
@@ -149,10 +153,10 @@ class StarNode(TernaryOperationNode):
 class DivNode(TernaryOperationNode):
     pass
 
-class IncNode(BinaryOperationNode):
+class IncNode(AtomicOperationNode):
     pass
 
-class DecNode(BinaryOperationNode):
+class DecNode(AtomicOperationNode):
     pass
 
 #######################################

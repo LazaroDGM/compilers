@@ -18,7 +18,7 @@ class Language08:
             G.NonTerminals('<tuple-list> <tuple> <hamper> <num> <num_list>')
         asign_pos_list, asign_pos, type_pos= G.NonTerminals('<asign_pos_list> <asig-pos> <pos>')
 
-        inst_list, inst = G.NonTerminals('<inst_list> <inst>')
+        inst_list, inst, return_inst = G.NonTerminals('<inst_list> <inst> <return>')
         let_tuple, op_inst, if_inst, while_inst, call_func, print_inst, cond = \
             G.NonTerminals('<let-tuple> <op-inst> <if-inst> <while-inst> <call-func> <printx-inst> <cond>')
 
@@ -26,8 +26,8 @@ class Language08:
         semi, comma, obrac, cbrac, okey, ckey, colon, opar, cpar = G.Terminals('; , [ ] { } : ( )')
         idx, number = G.Terminals('ID NUMBER')
         mapx, functionx, robil = G.Terminals('map function .ROBIL')
-        inx, withx, ifx, elsex, whilex, then, endif, endwhile, reserving, callx, printx = \
-            G.Terminals('in with if else while then endif endwhile reserving call print')
+        inx, withx, ifx, elsex, whilex, then, endif, endwhile, reserving, callx, printx, returnx = \
+            G.Terminals('in with if else while then endif endwhile reserving call print return')
 
         eq, neq, lte, gte, lt, gt = G.Terminals('== != <= >= < >')
         asign, plus, minus, star, div = G.Terminals('= + - * /')
@@ -59,12 +59,12 @@ class Language08:
         function_def %= functionx + idx + inx + idx + reserving + tuple_list + okey + inst_list + ckey, \
             lambda h,s: FunctionDefinitionNode(s[2], s[4], s[6], s[8])
         function_def %= functionx + idx + inx + idx + okey + inst_list + ckey, \
-            lambda h,s: FunctionDefinitionNode(s[2], s[4], [], s[8])
+            lambda h,s: FunctionDefinitionNode(s[2], s[4], [], s[6])
 
         tuple_list %= tuplex + comma + tuple_list, lambda h,s: [ s[1] ] + s[3]
         tuple_list %= tuplex, lambda h,s: [ s[1] ]
 
-        inst_list %= inst + inst_list, lambda h,s: [ s[1] ] + s[3]
+        inst_list %= inst + inst_list, lambda h,s: [ s[1] ] + s[2]
         inst_list %= inst, lambda h,s: [ s[1] ]
 
         inst %= let_tuple, lambda h,s: s[1]
@@ -73,6 +73,7 @@ class Language08:
         inst %= if_inst, lambda h,s: s[1]
         inst %= while_inst, lambda h,s: s[1]
         inst %= print_inst, lambda h,s: s[1]
+        inst %= return_inst, lambda h,s: s[1]
 
         let_tuple %= tuplex + asign + tuplex + semi, lambda h,s: LetTupleFromTupleNode(s[1], s[3])
         let_tuple %= tuplex + asign + tuplex + obrac + number + cbrac + semi, lambda h,s: LetTupleFromHamperNode(s[1], s[3], s[5])
@@ -105,6 +106,8 @@ class Language08:
         cond %= tuplex + gte + tuplex, lambda h,s: GreaterThanEqualNode(s[1], s[3])
 
         print_inst %= printx + tuplex + semi, lambda h,s: PrintNode(s[2])
+
+        return_inst %= returnx + tuplex + semi, lambda h,s: ReturnIstruction(s[2])
 
         ########################################################
         #                    PARSER SLR(1)                     #
@@ -156,6 +159,7 @@ class Language08:
                 (reserving, 'reserving'),
                 (callx, 'call'),
                 (printx, 'print'),
+                (returnx, 'return'),
 
                 (mapx, 'map'),
                 (functionx, 'function'),
@@ -189,6 +193,20 @@ class Language08:
             return False
         return True
 
+    ####################################
+    #                AST               #
+    ####################################
+    def Build_AST_Pure(self, text, verbose=False):
+        all_tokens = self.lexer(text)
+        tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
+        right_parse, operations = self.Parse_Tokens(tokens) 
+        if right_parse is None or operations is None:
+            return None
+        ast = evaluate_reverse_parse(right_parse, operations, tokens)
+        if verbose:
+            self.Print(ast)        
+        return ast
+
 
 text=\
 '''
@@ -199,19 +217,34 @@ map M1 (4,5){
     (1,0) = 5;
     (1,1) = 1;
     (0,1) = 2;
+    (3,4) = 0;
+}
+
+map M2 (3,3){
+    (0,0) = 7;    
 }
 
 function MAIN in M1{
 
     while (1,0) == (0,0) then
+        if (3,4) != (0,0) then
+            print (1,1);
+        endif
         (1,1) = (0,1) * (1,1);
-        (1,0)--;
+        (1,0)--;        
     endwhile
 
+    print (1,1);
+    return (0,0);
+}
+
+function F1 in M2 {
     print (1,1);
 }
 '''
 
 
-L  =Language08()
+L = Language08()
 L.is_Valid_Sintactic(text)
+ast = L.Build_AST_Pure(text)
+print(ast)
