@@ -2,7 +2,7 @@ from tools.shift_reduce import evaluate_reverse_parse, SLR1Parser, table_to_data
 from tools.lexer import Lexer
 from tools.pycompiler import Grammar, Terminal, NonTerminal, Token, SintacticException
 
-class Language07:
+class Language08:
     def __init__(self) -> None:
         ########################################################
         #                GRAMATICA 08  SLR(1)                  #        
@@ -99,10 +99,71 @@ class Language07:
         cond %= tuplex + gte + tuplex
 
         print_inst %= printx + tuplex + semi
-        
+
+        ########################################################
+        #                    PARSER SLR(1)                     #
+        ########################################################
+        parser = SLR1Parser(G)
+        self.parser = parser
+
+        ########################################################
+        #                        LEXER                         #
+        ########################################################
+        nonzero_digits = '|'.join(str(n) for n in range(1,10))
+        letters_lower = '|'.join(chr(n) for n in range(ord('a'),ord('z')+1))
+        letters_power = '|'.join(chr(n) for n in range(ord('A'),ord('Z')+1))
+        lexer = Lexer(
+            [
+                ('space', '( |\t|\n)( |\t|\n)*'),  
+
+                (robil, '\.ROBIL'),
+
+                (comma, ','),
+                (semi,';'),
+                (asign,'='),
+                (okey, '{'),
+                (ckey, '}'),
+                (opar, '\('),
+                (cpar,'\)'),
+                (colon,':'),
+
+                (plus,'\+'),
+                (minus,'-'),
+                (star, '\*'),
+                (div, '/'),
+
+                (eq,'=='),
+                (neq,'!='),
+                (lte,'<='),
+                (gte,'>='),
+                (lt,'<'),
+                (gt,'>'),                
+
+                (inx, 'in'),
+                (withx, 'with'),
+                (ifx, 'if'),
+                (elsex, 'else'),
+                (whilex, 'while'),
+                (then, 'then'),
+                (endif, 'endif'),
+                (endwhile, 'endwhile'),
+                (reserving, 'reserving'),
+                (callx, 'call'),
+                (printx, 'print'),
+
+                (mapx, 'map'),
+                (functionx, 'function'),
+                
+                (number,f'({nonzero_digits})(0|{nonzero_digits})*'),
+                (idx, f'({letters_lower}|{letters_power})({letters_lower}|{letters_power}|{nonzero_digits}|0)*')
+
+            ],
+            G.EOF
+        )
+        self.lexer = lexer
 
 
 
 
 
-
+L  =Language08()
