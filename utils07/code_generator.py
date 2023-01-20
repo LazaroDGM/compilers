@@ -34,11 +34,21 @@ class CodeGenerator(object):
 import numpy as np
 from collections import deque
 import enum
+from utils07.assembly import Map, Robot, DIR
 
 
 '''
         self.visit(node.sec_maps, context)                
-        self.visit(node.sec_inst, context)        
+        self.visit(node.sec_inst, context)  
+        context.code +=\
+'''
+try:
+    for inst in robot.instructions:
+        pass
+except Exception as e:
+    print('Error en tiempo de Ejecucion en :')
+    print(e)
+'''      
         return context
 
     ####################################################      
@@ -58,7 +68,7 @@ import enum
 '''
 ###### INST #######
 
-context.robot = Robot()
+robot = Robot()
 
 
 '''    
