@@ -1,6 +1,6 @@
 from tools.shift_reduce import evaluate_reverse_parse, SLR1Parser, table_to_dataframe
 from tools.lexer import Lexer
-from tools.pycompiler import Grammar, Terminal, NonTerminal, Token
+from tools.pycompiler import Grammar, Terminal, NonTerminal, Token, SintacticException
 from utils07.utils import *
 from utils07.type_collector import TypeCollector
 from utils07.semantic_check import SemanticCheck
@@ -87,6 +87,9 @@ class Language07:
         inst %= pull_i, lambda h,s: s[1]
         inst %= push_i, lambda h,s: s[1]
         inst %= pop_i, lambda h,s: s[1]
+
+        inst %= pop + mem, lambda h,s: PopMemNode()
+        inst %= push + mem, lambda h,s: PushMemNode()
 
         mov_i %= mov + dirx + semi, lambda h,s: MovNode(s[2])
         copy_i %= copy + semi, lambda h,s: CopyNode()
@@ -185,6 +188,18 @@ class Language07:
         ########################################################
         # ==================================================== #
         ########################################################
+
+    def Parse_Tokens(self, tokens):
+        right_parse, operations = None, None
+        try:
+            right_parse, operations = self.parser(tokens)
+        except SintacticException as e:
+            print(e)
+        except Exception as e:
+            print('Ocurrio un error durante el Parseo')
+        return right_parse, operations
+
+
     
     ####################################
     #                AST               #
@@ -192,7 +207,9 @@ class Language07:
     def Build_AST_Pure(self, text, verbose=False):
         all_tokens = self.lexer(text)
         tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
-        right_parse, operations = self.parser(tokens)        
+        right_parse, operations = self.Parse_Tokens(tokens) 
+        if right_parse is None or operations is None:
+            return None
         ast = evaluate_reverse_parse(right_parse, operations, tokens)
         if verbose:
             self.Print(ast)        
@@ -201,7 +218,9 @@ class Language07:
     def Build_AST_Checked(self, text):
         all_tokens = self.lexer(text)
         tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
-        right_parse, operations = self.parser(tokens)        
+        right_parse, operations = self.Parse_Tokens(tokens) 
+        if right_parse is None or operations is None:
+            return None
         ast = evaluate_reverse_parse(right_parse, operations, tokens)
 
         print('<----------Recolector----------->')        
@@ -221,7 +240,9 @@ class Language07:
     def Direct_Run(self, text):
         all_tokens = self.lexer(text)
         tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
-        right_parse, operations = self.parser(tokens)        
+        right_parse, operations = self.Parse_Tokens(tokens) 
+        if right_parse is None or operations is None:
+            return None    
         ast = evaluate_reverse_parse(right_parse, operations, tokens)
 
         print('<----------Recolector----------->')        
@@ -239,6 +260,7 @@ class Language07:
         if len(errors1) > 0 or len(errors2) > 0:
             return None        
         context = self.inst_generator.visit(ast, context)
+        print('<------------Ejecucion----------->')
         try:
             for inst in context.robot.instructions:
                 pass
@@ -251,7 +273,9 @@ class Language07:
     def Gen_Code(self, text):
         all_tokens = self.lexer(text)
         tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
-        right_parse, operations = self.parser(tokens)        
+        right_parse, operations = self.Parse_Tokens(tokens) 
+        if right_parse is None or operations is None:
+            return None   
         ast = evaluate_reverse_parse(right_parse, operations, tokens)
 
         print('<----------Recolector----------->')        
@@ -278,7 +302,9 @@ class Language07:
     def is_Valid_Sintactic(self, text, verbose=False):
         all_tokens = self.lexer(text)
         tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
-        right_parse, operations = self.parser(tokens)
+        right_parse, operations = self.Parse_Tokens(tokens) 
+        if right_parse is None or operations is None:
+            return False
         return True
 
 L = Language07()
@@ -351,9 +377,9 @@ label ENDWHILE:
 text = '''
 .MAPS{
     map M1:
-    [
+    [   
         [V,V,V,V],
-        [V,V,H,V],
+        [V,V,V,V],
         [V,190,V,H]
     ]
 
@@ -406,7 +432,8 @@ label ENDWHILE:
 }
 '''    
 
-print(L.Gen_Code(text))
-#L.Direct_Run(text)
+#print(L.Gen_Code(text))
+L.Direct_Run(text)
+
 
 
