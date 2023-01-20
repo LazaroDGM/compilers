@@ -33,8 +33,9 @@ class MapDefinitionNode(DefinitionNode):
         self.asigns = asigns
 
 class FunctionDefinitionNode(DefinitionNode):
-    def __init__(self, id, reserving, instructions) -> None:
-        self.id = id
+    def __init__(self, id_func, id_map, reserving, instructions) -> None:
+        self.id_func = id_func
+        self.id_map = id_map
         self.reserving = reserving
         self.instructions = instructions
 
@@ -107,6 +108,13 @@ class WhileNode(InstructionNode):
     def __init__(self, cond, instructions_while) -> None:
         self.cond = cond 
         self.instructions_while = instructions_while
+
+class CallFunctionNode(InstructionNode):
+    def __init__(self, tuple, id, tuple_list) -> None:
+        self.tuple = tuple
+        self.id = id
+        self.tuple_list = tuple_list
+
 
 ###################################
 

@@ -56,8 +56,10 @@ class Language08:
         num_list %= number, lambda h,s: [ s[1] ]
 
 
-        function_def %= functionx + idx + inx + idx + reserving + tuple_list + okey + inst_list + ckey
-        function_def %= functionx + idx + inx + idx + okey + inst_list + ckey
+        function_def %= functionx + idx + inx + idx + reserving + tuple_list + okey + inst_list + ckey, \
+            lambda h,s: FunctionDefinitionNode(s[2], s[4], s[6], s[8])
+        function_def %= functionx + idx + inx + idx + okey + inst_list + ckey, \
+            lambda h,s: FunctionDefinitionNode(s[2], s[4], [], s[8])
 
         tuple_list %= tuplex + comma + tuple_list, lambda h,s: [ s[1] ] + s[3]
         tuple_list %= tuplex, lambda h,s: [ s[1] ]
@@ -83,8 +85,10 @@ class Language08:
         op_inst %= tuplex + plus + plus + semi, lambda h,s: IncNode(s[1])
         op_inst %= tuplex + minus + minus + semi, lambda h,s: DecNode(s[1])
 
-        call_func %= tuplex + asign + callx + idx + withx + tuple_list + semi
-        call_func %= tuplex + asign + callx + idx + semi
+        call_func %= tuplex + asign + callx + idx + withx + tuple_list + semi, \
+            lambda h,s: CallFunctionNode(s[1], s[4], s[6])
+        call_func %= tuplex + asign + callx + idx + semi, \
+            lambda h,s: CallFunctionNode(s[1], s[4], [])
 
         tuplex %= opar + number + comma + number + cpar, lambda h,s: TupleNode(s[2], s[4])
 
