@@ -1,6 +1,7 @@
 from tools.shift_reduce import evaluate_reverse_parse, SLR1Parser, table_to_dataframe
 from tools.lexer import Lexer
 from tools.pycompiler import Grammar, Terminal, NonTerminal, Token, SintacticException
+from utils08.utils import *
 
 class Language08:
     def __init__(self) -> None:
@@ -31,77 +32,75 @@ class Language08:
         eq, neq, lte, gte, lt, gt = G.Terminals('== != <= >= < >')
         asign, plus, minus, star, div = G.Terminals('= + - * /')
 
-        program %= robil + def_list
+        program %= robil + def_list, lambda h,s: s[2]
 
-        def_list %= defx + def_list
-        def_list %= defx
+        def_list %= defx + def_list, lambda h,s: [ s[1] ] + s[2]
+        def_list %= defx,lambda h,s: [ s[1] ]
 
-        defx %= map_def
-        defx %= function_def
+        defx %= map_def, lambda h,s: s[1]
+        defx %= function_def, lambda h,s: s[1]
 
-        map_def %= mapx + idx + tuplex + okey + asign_pos_list + ckey
-        map_def %= mapx + idx + tuplex + okey + ckey
+        map_def %= mapx + idx + tuplex + okey + asign_pos_list + ckey, lambda h,s: MapDefinitionNode(s[2], s[3], s[5])
+        map_def %= mapx + idx + tuplex + okey + ckey, lambda h,s: MapDefinitionNode(s[2], s[3], [])
 
-        asign_pos_list %= asign_pos + asign_pos_list
-        asign_pos_list %= asign_pos
+        asign_pos_list %= asign_pos + asign_pos_list, lambda h,s: [ s[1] ] + s[2]
+        asign_pos_list %= asign_pos, lambda h,s: [ s[1] ]
 
-        asign_pos %= tuplex + asign + type_pos + semi
+        asign_pos %= tuplex + asign + number + semi, lambda h,s: NumberAsignNode(s[1], s[3])
+        asign_pos %= tuplex + asign + hamper + semi, lambda h,s: HamperAsignNode(s[1], s[3])
 
-        type_pos %= number
-        type_pos %= hamper
+        hamper %= obrac + num_list + cbrac, lambda h,s: s[2]
+        hamper %= obrac + cbrac, lambda h,s: []
 
-        hamper %= obrac + num_list + cbrac
-        hamper %= obrac + cbrac
-
-        num_list %= number
-        num_list %= number + comma + num_list
+        num_list %= number + comma + num_list, lambda h,s: [ s[1] ] + s[3]
+        num_list %= number, lambda h,s: [ s[1] ]
 
 
         function_def %= functionx + idx + inx + idx + reserving + tuple_list + okey + inst_list + ckey
         function_def %= functionx + idx + inx + idx + okey + inst_list + ckey
 
-        tuple_list %= tuplex + comma + tuple_list
-        tuple_list %= tuplex
+        tuple_list %= tuplex + comma + tuple_list, lambda h,s: [ s[1] ] + s[3]
+        tuple_list %= tuplex, lambda h,s: [ s[1] ]
 
-        inst_list %= inst + inst_list
-        inst_list %= inst
+        inst_list %= inst + inst_list, lambda h,s: [ s[1] ] + s[3]
+        inst_list %= inst, lambda h,s: [ s[1] ]
 
-        inst %= let_tuple
-        inst %= op_inst
-        inst %= call_func
-        inst %= if_inst
-        inst %= while_inst
-        inst %= print_inst
+        inst %= let_tuple, lambda h,s: s[1]
+        inst %= op_inst, lambda h,s: s[1]
+        inst %= call_func, lambda h,s: s[1]
+        inst %= if_inst, lambda h,s: s[1]
+        inst %= while_inst, lambda h,s: s[1]
+        inst %= print_inst, lambda h,s: s[1]
 
-        let_tuple %= tuplex + asign + tuplex + semi
-        let_tuple %= tuplex + asign + tuplex + obrac + number + cbrac + semi
+        let_tuple %= tuplex + asign + tuplex + semi, lambda h,s: LetTupleFromTupleNode(s[1], s[3])
+        let_tuple %= tuplex + asign + tuplex + obrac + number + cbrac + semi, lambda h,s: LetTupleFromHamperNode(s[1], s[3], s[5])
 
-        op_inst %= tuplex + asign + tuplex + plus + tuplex + semi
-        op_inst %= tuplex + asign + tuplex + minus + tuplex + semi
-        op_inst %= tuplex + asign + tuplex + star + tuplex + semi
-        op_inst %= tuplex + asign + tuplex + div + tuplex + semi
+        op_inst %= tuplex + asign + tuplex + plus + tuplex + semi, lambda h,s: PlusNode(s[1], s[3], s[5])
+        op_inst %= tuplex + asign + tuplex + minus + tuplex + semi, lambda h,s: MinusNode(s[1], s[3], s[5])
+        op_inst %= tuplex + asign + tuplex + star + tuplex + semi, lambda h,s: StarNode(s[1], s[3], s[5])
+        op_inst %= tuplex + asign + tuplex + div + tuplex + semi, lambda h,s: DivNode(s[1], s[3], s[5])
 
-        op_inst %= tuplex + plus + plus + semi
-        op_inst %= tuplex + minus + minus + semi
+        op_inst %= tuplex + plus + plus + semi, lambda h,s: IncNode(s[1])
+        op_inst %= tuplex + minus + minus + semi, lambda h,s: DecNode(s[1])
 
         call_func %= tuplex + asign + callx + idx + withx + tuple_list + semi
         call_func %= tuplex + asign + callx + idx + semi
 
-        tuplex %= opar + number + comma + number + cpar
+        tuplex %= opar + number + comma + number + cpar, lambda h,s: TupleNode(s[2], s[4])
 
         if_inst %= ifx + cond + then + inst_list + endif
         if_inst %= ifx + cond + then + inst_list + elsex +inst_list + endif
 
         while_inst %= whilex + cond + then + inst_list + endwhile
 
-        cond %= tuplex + eq + tuplex
-        cond %= tuplex + neq + tuplex
-        cond %= tuplex + lt + tuplex
-        cond %= tuplex + lte + tuplex
-        cond %= tuplex + gt + tuplex
-        cond %= tuplex + gte + tuplex
+        cond %= tuplex + eq + tuplex, lambda h,s: EqualNode(s[1], s[3])
+        cond %= tuplex + neq + tuplex, lambda h,s: NotEqualNode(s[1], s[3])
+        cond %= tuplex + lt + tuplex, lambda h,s: LessThanNode(s[1], s[3])
+        cond %= tuplex + lte + tuplex, lambda h,s: LessThanEqualNode(s[1], s[3])
+        cond %= tuplex + gt + tuplex, lambda h,s: GreaterThanNode(s[1], s[3])
+        cond %= tuplex + gte + tuplex, lambda h,s: GreaterThanEqualNode(s[1], s[3])
 
-        print_inst %= printx + tuplex + semi
+        print_inst %= printx + tuplex + semi, lambda h,s: PrintNode(s[2])
 
         ########################################################
         #                    PARSER SLR(1)                     #
