@@ -2,6 +2,7 @@ from tools.shift_reduce import evaluate_reverse_parse, SLR1Parser, table_to_data
 from tools.lexer import Lexer
 from tools.pycompiler import Grammar, Terminal, NonTerminal, Token, SintacticException
 from utils08.utils import *
+from utils08.name_collector import NameCollector
 
 class Language08:
     def __init__(self) -> None:
@@ -32,7 +33,7 @@ class Language08:
         eq, neq, lte, gte, lt, gt = G.Terminals('== != <= >= < >')
         asign, plus, minus, star, div = G.Terminals('= + - * /')
 
-        program %= robil + def_list, lambda h,s: s[2]
+        program %= robil + def_list, lambda h,s: ProgramNode(s[2])
 
         def_list %= defx + def_list, lambda h,s: [ s[1] ] + s[2]
         def_list %= defx,lambda h,s: [ s[1] ]
@@ -132,6 +133,8 @@ class Language08:
                 (asign,'='),
                 (okey, '{'),
                 (ckey, '}'),
+                (obrac, '\['),
+                (cbrac, '\]'),
                 (opar, '\('),
                 (cpar,'\)'),
                 (colon,':'),
@@ -171,6 +174,7 @@ class Language08:
             G.EOF
         )
         self.lexer = lexer
+        self.name_collector = NameCollector()
 
     def Parse_Tokens(self, tokens):
         right_parse, operations = None, None
@@ -218,13 +222,14 @@ map M1 (4,5){
     (1,1) = 1;
     (0,1) = 2;
     (3,4) = 0;
+    (3,0) = [6,3,9];
 }
 
 map M2 (3,3){
     (0,0) = 7;    
 }
 
-function MAIN in M1{
+function main in M1{
 
     while (1,0) == (0,0) then
         if (3,4) != (0,0) then
@@ -234,11 +239,21 @@ function MAIN in M1{
         (1,0)--;        
     endwhile
 
+    (3,3) = (3,0)[9];
+
     print (1,1);
     return (0,0);
 }
 
+map M2 (3,3){
+    (0,0) = 7;    
+}
+
 function F1 in M2 {
+    print (1,1);
+}
+
+function M2 in M1 {
     print (1,1);
 }
 '''
@@ -248,3 +263,6 @@ L = Language08()
 L.is_Valid_Sintactic(text)
 ast = L.Build_AST_Pure(text)
 print(ast)
+errors, context = L.name_collector.visit(ast)
+for err in errors:
+    print(err)
