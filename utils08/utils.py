@@ -194,6 +194,7 @@ class PrintNode(AtomicOperationNode):
 #######################################
 
 class TupleNode(BinaryNode):
-    pass
+    def tup(self):
+        return (self.left, self.right)
 
 #######################################

@@ -25,6 +25,8 @@ class Context:
         self.functions = {}
         self.functions_invocation = {}        
 
+        self.current_position= (0,0)
+
 
     ###################### MAPS ########################
 
