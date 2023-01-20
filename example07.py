@@ -88,6 +88,9 @@ class Language07:
         inst %= push_i, lambda h,s: s[1]
         inst %= pop_i, lambda h,s: s[1]
 
+        inst %= pop + mem, lambda h,s: PopMemNode()
+        inst %= push + mem, lambda h,s: PushMemNode()
+
         mov_i %= mov + dirx + semi, lambda h,s: MovNode(s[2])
         copy_i %= copy + semi, lambda h,s: CopyNode()
         paste_i %= paste + semi, lambda h,s: PasteNode()
