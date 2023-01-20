@@ -231,7 +231,7 @@ map M2 (3,3){
     (0,0) = 7;    
 }
 
-function main in M1{
+function MAIN in M1{
 
     while (1,0) == (0,0) then
         if (3,4) != (0,0) then
@@ -252,7 +252,7 @@ map M2 (3,3){
     (0,0) = 7;    
 }
 
-function F1 in M90 {
+function F2 in M90 reserving (0,0), (2,2), (3,4){
     print (1,1);
 }
 

@@ -91,8 +91,11 @@ class NameCollector(object):
         context = Context()
         for defx in node.defs:
             self.visit(defx, context)
-        if 'main' not in context.functions.keys():
-            self.errors.append('No existe ninguna funcion de inicio: "main".')        
+        if 'MAIN' not in context.functions.keys():
+            self.errors.append('No existe ninguna funcion de inicio: "MAIN".') 
+        elif len(context.functions['MAIN'].args) > 0:
+            count = len(context.functions['MAIN'].args)
+            self.errors.append(f'La funcion de inicio: "MAIN" debe tener 0 argumentos y esta definida con {count}.') 
         return self.errors, context
 
     ####################################################

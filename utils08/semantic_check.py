@@ -46,7 +46,7 @@ class SemanticCheck(object):
         else:
             context.functions_invocation[node.id] = True
             if len(node.tuple_list) != len(context.functions[node.id].args):
-                self.errors.append(f"La funcion {node.id} debe recibir {len(context.functions[node.id].args)} y esta recibiendo {len(node.tuple_list)} argumentos")
+                self.errors.append(f"La funcion {node.id} debe recibir {len(context.functions[node.id].args)} argumentos y esta recibiendo {len(node.tuple_list)} argumentos")
 
 
     @visitor.when(IfEndNode)
