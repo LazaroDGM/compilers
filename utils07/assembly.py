@@ -187,6 +187,8 @@ class Robot:
     
     ### Move ###
     def move(self, dir:DIR):
+        if self.map is None:
+            raise Exception('Robot sin mapa')
         if dir == DIR.N:
             self.position = (self.position[0] - 1, self.position[1])
         if dir == DIR.S:
@@ -195,13 +197,15 @@ class Robot:
             self.position = (self.position[0], self.position[1] - 1)
         if dir == DIR.E:
             self.position = (self.position[0], self.position[1] + 1)
+        if self.position[0] not in range(0, self.map.getLength[0]) or self.position[1] not in range(0, self.map.getLength[1]):
+            raise Exception(f"move(): posicion \"{self.position}\" fuera de rango del mapa")
         # Aqui se podria controlar si la nueva posicion es correcta
 
 
     ### Recursividad ###
     def overlap(self, mapp:Map = None):
         """ Toma el mapa actual y lo almacena en la pila en forma de tupla junto a la actual posicion. Luego asigna al robot los nuevos mapa y posicion como sus actuales """
-        if self.map != None: self.maps_stack.append((self.map, self.position))
+        if self.map != None: self.maps_stack.append((self.map, self.position, self.instructions.indicator + 1))
     
         if mapp == None:
             mapp = self.map
@@ -230,7 +234,7 @@ class Robot:
 
     def pull(self):
         """Lo contrario del overlap: saca el viejo mapa y la vieja posicion y los reemplaza por los actuales, desechando estos ultimos"""
-        try: self.map, self.position = self.maps_stack.pop()
+        try: self.map, self.position, self.instructions.indicator = self.maps_stack.pop()
         except: raise Exception("pull(): no habian mapas en la pila")
             
     
@@ -284,4 +288,3 @@ class InstructionStack:
             if not indicator_jump_flag: self.indicator = temp_indicator + 1
 
     
-            

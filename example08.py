@@ -236,6 +236,8 @@ function MAIN in M1{
     while (1,0) == (0,0) then
         if (3,4) != (0,0) then
             print (1,1);
+        else
+            print (3,4);
         endif
         (1,1) = (0,1) * (1,1);
         (1,0)--;        
@@ -271,4 +273,6 @@ for err in errors:
     print(err)
 errors, warnings, context = L.semantic_check.visit(ast,context)
 for err in errors:
-    print(err)
+    print('Error: ' + err)
+for war in warnings:
+    print('Advertencia: ' + war)

@@ -270,7 +270,7 @@ class Language07:
         return True
         
 
-    def Gen_Code(self, text):
+    def Gen_Code(self, text, path= None):
         all_tokens = self.lexer(text)
         tokens = list(filter(lambda token: token.token_type != 'space', all_tokens))
         right_parse, operations = self.Parse_Tokens(tokens) 
@@ -293,6 +293,9 @@ class Language07:
         if len(errors1) > 0 or len(errors2) > 0:
             return None        
         context = self.code_generator.visit(ast, context)        
+        if path is not None:
+            with open(path, 'w')as ft:
+                ft.write(context.code)
         return context.code
 
 
@@ -421,8 +424,8 @@ label WHILE:
     mov W;
     goto WHILE;
 
-    copy;    
-    copy;
+    print;
+    print;
 
 label ENDWHILE:
     mov E;
@@ -432,8 +435,8 @@ label ENDWHILE:
 }
 '''    
 
-print(L.Gen_Code(text))
-L.Direct_Run(text)
+print(L.Gen_Code(text, 'robot01.py'))
+#L.Direct_Run(text)
 
 
 
